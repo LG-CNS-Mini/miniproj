@@ -25,22 +25,37 @@ repositories {
 }
 
 dependencies {
+   	// Swagger/OpenAPI 관련 종속성 추가
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+	// h2 databse
+	runtimeOnly 'com.h2database:h2'
+
+    // openssl rand -base64 64
+	// jwt
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    
+
+	// invalidation
+	// JSR - 303 표준
+	// 컨트롤러에서 DTO를 파라미터로 받을 때 데이터의 유효성 체크를 도와주는 lib
+	implementation group: 'org.springframework.boot', name : 'spring-boot-starter-validation'
+	
+	// env
+	// 보안상 중요한 정보를 github 에 푸시하지 않고 코드에서 참조만 할 수 있도록
+	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+
+    // open ai
+	implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-
-    // env
-    implementation 'io.github.cdimascio:dotenv-java:3.0.0'
-    // invalidation
-    implementation group: 'org.springframework.boot', name : 'spring-boot-starter-validation'
-
-    // jwt
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-
-
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
     annotationProcessor 'org.projectlombok:lombok'

@@ -12,5 +12,4 @@ public class BeInstagramCloneApplication {
         env.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
         SpringApplication.run(BeInstagramCloneApplication.class, args);
     }
-
 }
