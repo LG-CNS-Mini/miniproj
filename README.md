@@ -13,3 +13,20 @@
 👉 [요구사항 명세서 바로가기](https://hyosungitx.notion.site/268761ee040e80db90c4f2ac5e9e8166)
 
 ---
+
+## 인스타그램 클론코딩
+https://github.com/Instagram-Clone-Coding
+
+## ERD
+https://www.erdcloud.com/d/ufv5P5mkEhpe2iStd
+
+## Security
+https://github.com/do5do/funding
+
+## Facebook OAuth2
+https://growth-coder.tistory.com/141
+
+## Jira
+https://jinnys.atlassian.net/jira/software/projects/SCRUM/boards/1
+
+---
