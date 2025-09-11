@@ -2,11 +2,16 @@ package com.lgcns.beinstagramclone.post.domain.entity;
 
 import java.time.LocalDateTime;
 
+import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,6 +41,10 @@ public class PostEntity{
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createDate;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "author_email")
+    private UserEntity author;
 
     @PrePersist
     protected void onCreate() {

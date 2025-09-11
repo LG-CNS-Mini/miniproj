@@ -3,6 +3,8 @@ package com.lgcns.beinstagramclone.user.domain.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.lgcns.beinstagramclone.post.domain.entity.PostEntity;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,9 +44,8 @@ public class UserEntity {
     @Column(nullable = false, length = 50)
     private String name     ;
 
-    //@OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
-    //@OneToMany(mappedBy = "author", orphanRemoval = false)
-    //private List<BlogEntity> blogs = new ArrayList<>();
+    @OneToMany(mappedBy="author",cascade = CascadeType.ALL, orphanRemoval = false)
+    private List<PostEntity> posts = new ArrayList<>();
 
     // @OneToMany(mappedBy = "author", orphanRemoval = false)
     // private List<CommentEntity> comments = new ArrayList<>();

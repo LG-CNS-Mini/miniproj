@@ -26,53 +26,5 @@ public class PostCtrl {
     @Autowired
     private PostService postService;
 
-    @GetMapping("/posts")
-    public ResponseEntity<List<PostResponseDTO>> posts() {
-        List<PostResponseDTO> list = postService.select();
-        return new ResponseEntity<List<PostResponseDTO>>(list, HttpStatus.OK);
-
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<Void> register(
-            @RequestBody PostRequestDTO request) {
-        PostResponseDTO response = postService.insert(request);
-        if (response != null) {
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        } else {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/read/{postID}")
-    public ResponseEntity<PostResponseDTO> read(@PathVariable("postID") Integer postID) {
-
-        PostResponseDTO response = postService.findPost(postID);
-        if (response != null) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @PutMapping("update/{postID}/")
-    public ResponseEntity<Void> update(@PathVariable("postID") Integer postID, @RequestBody PostRequestDTO request) {
-        int result = postService.update(postID, request);
-        if (result != 0) {
-            return ResponseEntity.status(HttpStatus.OK).body(null);
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
-
-    @DeleteMapping("delete/{postID}")
-    public ResponseEntity<Void> delete(@PathVariable("postID") Integer postID) {
-        int result = postService.delete(postID);
-        if (result != 0) {
-            return ResponseEntity.status(HttpStatus.OK).body(null);
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
 
 }

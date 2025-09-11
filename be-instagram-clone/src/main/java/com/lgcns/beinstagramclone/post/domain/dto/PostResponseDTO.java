@@ -23,13 +23,15 @@ public class PostResponseDTO {
     private String content;
     private String hashtag;
     private LocalDateTime createDate;
+    private String authorEmail;
 
-    public static PostResponseDTO fromEntity(PostEntity entity) {
+    public static PostResponseDTO fromEntity(PostEntity post) {
         return PostResponseDTO.builder()
-                .postID(entity.getPostID())
-                .content(entity.getContent())
-                .hashtag(entity.getHashtag())
-                .createDate(entity.getCreateDate())
+                .postID(post.getPostID())
+                .content(post.getContent())
+                .hashtag(post.getHashtag())
+                .createDate(post.getCreateDate())
+                .authorEmail(post.getAuthor().getEmail())
                 .build();
     }
 }

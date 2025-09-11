@@ -1,6 +1,7 @@
 package com.lgcns.beinstagramclone.post.domain.dto;
 
 import com.lgcns.beinstagramclone.post.domain.entity.PostEntity;
+import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,10 +20,13 @@ public class PostRequestDTO {
     private String content; 
     private String hashtag; 
 
-    public PostEntity toEntity() {
+    private String authorEmail;
+
+    public PostEntity toEntity(UserEntity author) {
         return PostEntity.builder()
                 .content(this.content)
                 .hashtag(this.hashtag)
+                .author(author)
                 .build();
     }
 }
