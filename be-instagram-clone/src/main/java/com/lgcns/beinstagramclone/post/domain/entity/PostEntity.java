@@ -28,10 +28,10 @@ public class PostEntity{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer postID;
 
-    @Column(nullable = false, length = 2000)  // 게시글 본문 → not null + 길이 제한
+    @Column(nullable = false, length = 2000)  
     private String content;
 
-    @Column(length = 255)  // 해시태그 → 길이 제한만
+    @Column(length = 255)  
     private String hashtag;
 
     @Column(nullable = false, updatable = false)
