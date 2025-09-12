@@ -32,14 +32,16 @@ public class PostService {
         return list;
     }
 
-    public int insert(PostRequestDTO request) {
+    @Transactional
+    public PostResponseDTO insert(PostRequestDTO request) {
         UserEntity author = userRepository.findById(request.getAuthorEmail())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         PostEntity saved = postRepository.save(request.toEntity(author));
-        return 1;
+        return PostResponseDTO.fromEntity(saved);
     }
 
+    @Transactional
     public PostResponseDTO findPost(Integer id) {
         PostEntity postEntity = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
@@ -51,14 +53,14 @@ public class PostService {
     public int update(Integer id, PostRequestDTO post) {
         PostEntity postEntity = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
-        postEntity.setTitle(post.getTitle());
         postEntity.setContent(post.getContent());
         return 1;
     }
 
+    @Transactional
     public int delete(Integer id){
         postRepository.deleteById(id);
         return 1;
     }
-      
+
 }

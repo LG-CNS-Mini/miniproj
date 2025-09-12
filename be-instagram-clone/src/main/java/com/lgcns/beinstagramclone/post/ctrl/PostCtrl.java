@@ -55,7 +55,7 @@ public class PostCtrl {
         }
     }
 
-    @PutMapping("update/{postID}/")
+    @PutMapping("update/{postID}")
     public ResponseEntity<Void> update(@PathVariable("postID") Integer postID, @RequestBody PostRequestDTO request) {
         int result = postService.update(postID, request);
         if (result != 0) {
