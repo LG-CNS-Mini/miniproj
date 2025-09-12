@@ -16,9 +16,9 @@ function App() {
         <BrowserRouter>
             <DivTitleText>미니프로젝트7조 인스타그램</DivTitleText>
             <Routes>
-                {/* <Route path="/" element={<SignUpPage />} />
-                <Route path="/signin" element={<SignInPage />} /> */}
-                <Route path="/" element={<FeedPage />} />
+                <Route path="/" element={<SignUpPage />} />
+                <Route path="/signin" element={<SignInPage />} />
+                <Route path="/main" element={<FeedPage />} />
             </Routes>
         </BrowserRouter>
     );
