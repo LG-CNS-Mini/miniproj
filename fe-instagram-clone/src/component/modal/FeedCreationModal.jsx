@@ -326,7 +326,7 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
   if (!isOpen) return null;
   const [files, setFiles] = useState([]);
   const [step, setStep] = useState(1);
-  const [caption, setCaption] = useState("");
+  const [content, setContent] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previewURL, setPreviewURL] = useState("");
 
@@ -498,8 +498,8 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
               <RightBox>
                 <TextArea
                   placeholder="문구를 입력하세요..."
-                  value={caption}
-                  onChange={e => setCaption(e.target.value)}
+                  value={content}
+                  onChange={e => setContent(e.target.value)}
                 />
               </RightBox>
             </>
