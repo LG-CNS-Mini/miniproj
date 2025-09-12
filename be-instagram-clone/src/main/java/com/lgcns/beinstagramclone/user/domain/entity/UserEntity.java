@@ -3,6 +3,7 @@ package com.lgcns.beinstagramclone.user.domain.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.lgcns.beinstagramclone.post.domain.entity.PostEntity;
 
 import jakarta.persistence.CascadeType;
@@ -45,6 +46,7 @@ public class UserEntity {
     private String name     ;
 
     @OneToMany(mappedBy="author",cascade = CascadeType.ALL, orphanRemoval = false)
+    @JsonManagedReference
     private List<PostEntity> posts = new ArrayList<>();
 
     // @OneToMany(mappedBy = "author", orphanRemoval = false)

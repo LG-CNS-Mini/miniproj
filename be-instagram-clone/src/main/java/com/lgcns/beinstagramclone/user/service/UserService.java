@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.lgcns.beinstagramclone.user.domain.dto.UserRequestDTO;
 import com.lgcns.beinstagramclone.user.domain.dto.UserResponseDTO;
 import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
+import com.lgcns.beinstagramclone.user.repository.RefreshTokenRepository;
 import com.lgcns.beinstagramclone.user.repository.UserRepository;
 import com.lgcns.beinstagramclone.util.JwtProvider;
 
@@ -17,6 +18,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository ;
 
     @Autowired
     private JwtProvider provider;
@@ -46,5 +50,12 @@ public class UserService {
 
 
         return map;
+    }
+
+    public void logout(String email) {
+        System.out.println(">>> service logout redis delete"); 
+        // Redis에서 Refresh Token 제거
+        refreshTokenRepository.delete(email); 
+    
     }
 }

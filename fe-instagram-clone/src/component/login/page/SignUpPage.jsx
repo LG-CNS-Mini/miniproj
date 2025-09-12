@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import api from "../../../api/axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // Container
 const Container = styled.div`
@@ -66,6 +66,20 @@ const Button = styled.button`
     }
 `;
 
+const LinkText = styled.div`
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+
+    a {
+        color: #007bff;
+        text-decoration: none;
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+`;
+
 // SignUp Component
 const SignUpPage = () => {
     const [email, setEmail] = useState("");
@@ -75,25 +89,24 @@ const SignUpPage = () => {
 
     const moveUrl = useNavigate();
 
-    const handleChange = (e) => {};
-
     const handleSubmit = async (e, email, passwd, name) => {
         e.preventDefault();
-        console.log(">>>>>>>>>>>>> ", email, passwd, name);
+        console.log(">>>>>>>>>>> ", email, passwd, name);
+
         if (passwd !== confirmPasswd) {
             alert("비밀번호가 일치하지 않습니다.");
             return;
         }
         console.log("회원가입 정보:");
-        // 여기서 API 호출 가능 axios post : data(email, passwd, name)
+        // 여기서 API 호출 가능 axios post : data(emai, passwd, name)
         // 1. 유효성 체크
-        // 2. 정상적인 데이터 입력시 화면전환 /login 이동
+        // 2. 정상적인 데이터 입력시 화면전환 /signin 이동
         const data = { email, passwd, name };
         await api
             .post("/api/v2/inspire/user/signup", data)
             .then((response) => {
-                //console.log("[debug] >>> post response : ", response);
-                moveUrl("/login");
+                // console.log("[debug] >>> post response : " , response );
+                moveUrl("/signin");
             })
             .catch((error) => {
                 console.log("[debug] >>> post error");
@@ -104,6 +117,7 @@ const SignUpPage = () => {
         <Container>
             <FormWrapper>
                 <Title>회원가입</Title>
+
                 <Input
                     type="email"
                     name="email"
@@ -145,11 +159,15 @@ const SignUpPage = () => {
                     required
                 />
                 <Button
-                    type="submit"
+                    type="button"
                     onClick={(e) => handleSubmit(e, email, passwd, name)}
                 >
                     가입하기
                 </Button>
+
+                <LinkText>
+                    이미 회원이신가요? <Link to="/signin">로그인</Link>
+                </LinkText>
             </FormWrapper>
         </Container>
     );

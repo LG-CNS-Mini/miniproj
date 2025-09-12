@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import api from "../../../api/axios";
+import { Link, useNavigate } from "react-router-dom";
+import SignUpPage from "./SignUpPage";
 
 // Container
 const Container = styled.div`
@@ -80,26 +81,35 @@ const TextLink = styled.p`
 `;
 
 const SignInPage = () => {
+    const access = localStorage.getItem("accessToken");
+    const refresh = localStorage.getItem("refreshToken");
+
+    console.log("[debug] SignInPage token acc : ", access);
+    console.log("[debug] SignInPage token ref : ", refresh);
+
     const [email, setEmail] = useState("");
     const [passwd, setPasswd] = useState("");
 
     const moveUrl = useNavigate();
 
     const handleSubmit = async (e, email, passwd) => {
-        console.log("로그인 정보:");
         // API 호출 가능
         const data = { email, passwd };
+        console.log(">>>>>>>>>>> SignInPage handleSubmit :");
+
         await api
             .get("/api/v2/inspire/user/signin", { params: data })
             .then((response) => {
-                console.log("[debug] >>> get response : ", response);
+                console.log("[debug] >>> post response : ", response);
                 console.log(
-                    "access token : " + response.headers.get("authorization")
+                    "accessToken",
+                    response.headers.get("authorization")
                 );
                 console.log(
-                    "refresh token : " + response.headers.get("refresh-token")
+                    "refreshToken",
+                    response.headers.get("refresh-token")
                 );
-
+                // token
                 localStorage.setItem(
                     "accessToken",
                     response.headers.get("authorization")
@@ -108,13 +118,14 @@ const SignInPage = () => {
                     "refreshToken",
                     response.headers.get("refresh-token")
                 );
+                // user
                 localStorage.setItem("userInfo", response.data.name);
                 localStorage.setItem("userEmail", response.data.email);
 
-                moveUrl("/blog");
+                moveUrl("/main");
             })
             .catch((error) => {
-                console.log("[debug] >>> get error");
+                console.log("[debug] >>> post error");
             });
     };
 
@@ -122,12 +133,15 @@ const SignInPage = () => {
         <Container>
             <FormWrapper>
                 <Title>로그인</Title>
+
                 <Input
                     type="email"
                     name="email"
                     placeholder="이메일"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                        setEmail(e.target.value);
+                    }}
                     required
                 />
                 <Input
@@ -135,7 +149,9 @@ const SignInPage = () => {
                     name="password"
                     placeholder="비밀번호"
                     value={passwd}
-                    onChange={(e) => setPasswd(e.target.value)}
+                    onChange={(e) => {
+                        setPasswd(e.target.value);
+                    }}
                     required
                 />
                 <Button
@@ -146,7 +162,9 @@ const SignInPage = () => {
                 </Button>
 
                 <TextLink>비밀번호를 잊으셨나요?</TextLink>
-                <TextLink>회원가입</TextLink>
+                <TextLink>
+                    <Link to="/">회원가입</Link>
+                </TextLink>
             </FormWrapper>
         </Container>
     );

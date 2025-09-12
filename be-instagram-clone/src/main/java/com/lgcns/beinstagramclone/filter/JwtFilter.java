@@ -102,6 +102,8 @@ public class JwtFilter implements Filter{
                 ||  path.startsWith("/api/v2/inspire/forcast/getData")
                 ||  path.startsWith("/api/v2/inspire/ai/chat")
                 ||  path.startsWith("/api/v2/inspire/ai/java")
+                ||  path.startsWith("/api/v2/inspire/sse/subscribe")
+                ||  path.startsWith("/api/v2/inspire/sse/notifications")
                 ;
                 
     }
