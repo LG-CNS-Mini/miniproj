@@ -19,5 +19,16 @@ import lombok.ToString;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true) // json에 정의되지 않은 필드는 무시
 public class ImageResponseDTO {
-    private List<String> hashtags;
+    private List<hashtag> hashtags;
+
+    @Builder
+    @Setter
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true) // json에 정의되지 않은 필드는 무시
+    public static class hashtag {
+        private String hashtag;
+    }
 }

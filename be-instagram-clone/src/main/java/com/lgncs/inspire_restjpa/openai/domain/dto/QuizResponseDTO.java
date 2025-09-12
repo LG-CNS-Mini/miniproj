@@ -17,10 +17,10 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@JsonIgnoreProperties(ignoreUnknown = true) // json에 정의되지 않은 필드는 무시 
+@JsonIgnoreProperties(ignoreUnknown = true) // json에 정의되지 않은 필드는 무시
 public class QuizResponseDTO {
-    
-    private List<Quiz> quizs ; 
+
+    private List<Quiz> quizs;
 
     @Builder
     @Setter
@@ -28,10 +28,10 @@ public class QuizResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @ToString
-    @JsonIgnoreProperties(ignoreUnknown = true) // json에 정의되지 않은 필드는 무시 
+    @JsonIgnoreProperties(ignoreUnknown = true) // json에 정의되지 않은 필드는 무시
     public static class Quiz {
-        private String          question ; 
-        private List<String>    options ; 
-        private String          answer ; 
+        private String question;
+        private List<String> options;
+        private String answer;
     }
 }
