@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.lgcns.beinstagramclone.post.domain.dto.PostRequestDTO;
 import com.lgcns.beinstagramclone.post.domain.dto.PostResponseDTO;
 import com.lgcns.beinstagramclone.post.service.PostService;
+
 
 @RestController
 @RequestMapping("/api/v1/post")
@@ -38,9 +40,8 @@ public class PostCtrl {
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> register(
-            @RequestPart("post") PostRequestDTO request,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        PostResponseDTO response = postService.insert(request, images);
+            @ModelAttribute PostRequestDTO request) {
+        PostResponseDTO response = postService.insert(request);
         if (response != null) {
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {

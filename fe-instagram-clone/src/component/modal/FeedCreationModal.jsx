@@ -365,13 +365,22 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
   };
 
   const handleShare = () => {
-    // TODO : post create api 연동
-    api.post("/api/v2/posts/create" , {
-      files : files,
-      userId : {
-        localStorage.getItem("userInfo").userId
+    const formData = new FormData();
+
+    // content 추가
+    formData.append("content", content);
+
+    // files 배열을 FormData에 추가 (Blob -> File 변환 필요 없으면 바로 추가)
+    files.forEach((file, i) => {
+      // 파일 이름 지정 (예: file0.png, file1.png ...)
+      formData.append(`postImages[${i}]`, file);
+    });
+
+    api.post("/api/v1/post/register", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
-    })
+    });
     onClose();
   };
 
@@ -453,9 +462,9 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
                   </PreviewWrapper>
                 )}
               </IconContainer>
-              <FileUploadComponent 
+              <FileUploadComponent
                 setPreviewURL={setPreviewURL}
-                setFiles={setFiles}  
+                setFiles={setFiles}
               />
             </>
           )}

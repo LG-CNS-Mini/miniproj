@@ -1,6 +1,10 @@
 server:
     port: 8088
 spring:
+    servlet:
+        multipart:
+            max-file-size: 10MB
+            max-request-size: 50MB
     application:
         name: be-instagram-clone
     #maria db
@@ -29,4 +33,4 @@ jwt:
     secret: ${JWT_SECRET_KEY}
 
 file:
-  upload-dir: uploads
+  upload-dir: C:/uploads

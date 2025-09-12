@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
 
 import jakarta.persistence.CascadeType;
@@ -52,6 +54,7 @@ public class PostEntity {
     private UserEntity author;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<PostImageEntity> images = new ArrayList<>();
 
     @PrePersist
