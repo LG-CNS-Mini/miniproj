@@ -369,7 +369,7 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
 
     // content 추가
     formData.append("content", content);
-
+    formData.append("authorEmail", localStorage.getItem("userEmail"));
     // files 배열을 FormData에 추가 (Blob -> File 변환 필요 없으면 바로 추가)
     files.forEach((file, i) => {
       // 파일 이름 지정 (예: file0.png, file1.png ...)
