@@ -1,78 +1,90 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.4.9'
-    id 'io.spring.dependency-management' version '1.1.7'
+	id 'java'
+	id 'org.springframework.boot' version '3.4.9'
+	id 'io.spring.dependency-management' version '1.1.7'
 }
 
-group = 'com.lgcns'
+group = 'com.lgncs'
 version = '0.0.1-SNAPSHOT'
-description = 'be-instagram-clone'
+description = 'Demo project for Spring Boot'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
 }
 
 configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
-   	// Swagger/OpenAPI 관련 종속성 추가
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+	
+	// swagger + springboot 3.x 
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
-	// h2 databse
+	// h2 database 
 	runtimeOnly 'com.h2database:h2'
 
-    // openssl rand -base64 64
+	// openssl rand -base64 64
 	// jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-    
 
-	// invalidation
+
+	// invalidation 
 	// JSR - 303 표준
-	// 컨트롤러에서 DTO를 파라미터로 받을 때 데이터의 유효성 체크를 도와주는 lib
+	// 컨트롤로에서 dto를 파라미터로 받을 때 데이터의 유효성 체크를 도와주는 lib 
 	implementation group: 'org.springframework.boot', name : 'spring-boot-starter-validation'
-	
+
 	// env
-	// 보안상 중요한 정보를 github 에 푸시하지 않고 코드에서 참조만 할 수 있도록
+	// 보안상 중요한 정보를 github 에 푸시하지 않고 코드에서 참조만 할 수 있도록 
 	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 
-    // open ai
+
+	// open ai
 	implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
-
-    // ./gradlew --refresh-dependencies     
+	
+	// ./gradlew --refresh-dependencies     
 	// Spring Data Redis + Redis 클라이언트 Lettuce (기본)
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     // implementation 'io.lettuce:lettuce-core'
 	// implementation 'it.ozimov:embedded-redis:0.7.3'
 	implementation 'com.github.codemonstur:embedded-redis:1.0.0'
 	implementation 'org.springframework:spring-core'
-    
 
 
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+// 임시 추가
+
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-    compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.5'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+
+
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.5'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
+	useJUnitPlatform()
 }
+
+
+
