@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -134,15 +135,15 @@ public class ChatService {
         return null;
     }
 
-    public ImageResponseDTO imageHashtag() {
+    //////////////////////////////// 이미지/////////////////////
+
+    public ImageResponseDTO imageHashtag(MultipartFile file) {
         System.out.println(">>> service imageHashtag");
 
         // 이미지 로드
-        String imagePath = "/test_image.jpg"; // resources 폴더 기준
         byte[] imageBytes = null;
         try {
-            ClassPathResource imgFile = new ClassPathResource(imagePath);
-            imageBytes = imgFile.getInputStream().readAllBytes();
+            imageBytes = file.getBytes();
         } catch (IOException e) {
             e.printStackTrace();
             return null;
