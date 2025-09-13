@@ -33,7 +33,7 @@ import lombok.ToString;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = {"author","images"})
 public class PostEntity {
 
     @Id

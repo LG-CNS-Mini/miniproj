@@ -8,5 +8,4 @@ import com.lgcns.beinstagramclone.post.domain.entity.PostEntity;
 import com.lgcns.beinstagramclone.post.domain.entity.PostImageEntity;
 
 public interface PostImageRepository extends JpaRepository<PostImageEntity, Integer> {
-    List<PostImageEntity> findByPostOrderBySortOrderAscIdAsc(PostEntity post);
 }

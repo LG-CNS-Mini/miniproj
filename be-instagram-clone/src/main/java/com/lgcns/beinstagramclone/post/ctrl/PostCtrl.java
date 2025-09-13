@@ -35,7 +35,6 @@ public class PostCtrl {
     public ResponseEntity<List<PostResponseDTO>> posts() {
         List<PostResponseDTO> list = postService.select();
         return new ResponseEntity<List<PostResponseDTO>>(list, HttpStatus.OK);
-
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
