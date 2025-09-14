@@ -109,7 +109,7 @@ const SignUpPage = () => {
                 moveUrl("/signin");
             })
             .catch((error) => {
-                console.log("[debug] >>> post error");
+                console.log("[debug] >>> post error :" + error);
             });
     };
 
