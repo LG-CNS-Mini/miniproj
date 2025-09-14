@@ -26,18 +26,18 @@ repositories {
 
 dependencies {
     
-    // 타임리프 템플릿 엔진 (로그인/로그아웃 페이지 등을 만들 때 유용해)
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    // // 타임리프 템플릿 엔진 (로그인/로그아웃 페이지 등을 만들 때 유용해)
+    // implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-    // OAuth2 클라이언트 기능
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    // // OAuth2 클라이언트 기능
+    // implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
-    // 스프링 시큐리티 핵심 라이브러리
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    testImplementation 'org.springframework.security:spring-security-test'
+    // // 스프링 시큐리티 핵심 라이브러리
+    // implementation 'org.springframework.boot:spring-boot-starter-security'
+    // testImplementation 'org.springframework.security:spring-security-test'
 
    	// Swagger/OpenAPI 관련 종속성 추가
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0' 
 
 	// h2 databse
 	runtimeOnly 'com.h2database:h2'
