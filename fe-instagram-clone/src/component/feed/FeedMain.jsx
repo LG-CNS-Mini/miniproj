@@ -1,12 +1,11 @@
-import { use, useEffect } from "react";
+import { useState, useEffect } from "react";
+import ProfileMain from "../profile/ProfileMain";
 
 
-const FeedMain = () => {
-    const [] = useState(null);
-    
+const FeedMain = ({feedPage}) => {
     const getPostIdsFromServer = async () => {
         try {
-            const userId = localStorage.getItem("userInfo").userId;
+            const userId = localStorage.getItem("userEmail");
             const response = await api.get(`/posts/${userId}`,{
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -24,7 +23,10 @@ const FeedMain = () => {
     }, []);
 
     return (
-        
+        <>
+            {feedPage === 'feed' ? <FeedMain/> : null}
+            {feedPage === 'profile' ? <ProfileMain/>: null}
+        </>
     )
 }
 

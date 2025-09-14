@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 // Styled Components
@@ -128,7 +129,7 @@ const CreateIcon = () => (
 );
 
 // Main Navigation Component
-const Navigation = ({ activeItem = 'home', onNavigate, profileImage }) => {
+const Navigation = ({ activeItem = 'home', profileImage, feedCreateModalOpen, setFeedPage}) => {
   const navItems = [
     { key: 'home', label: '홈', icon: <HomeIcon /> },
     { key: 'search', label: '검색', icon: <SearchIcon /> },
@@ -138,12 +139,29 @@ const Navigation = ({ activeItem = 'home', onNavigate, profileImage }) => {
     // { key: 'notifications', label: '알림', icon: <LikeIcon /> },
     { key: 'create', label: '만들기', icon: <CreateIcon /> },
   ];
+  // TODO : profileImage 불러오기
+  const userId = localStorage.getItem('userEmail');
+  
+  const moveURL = useNavigate();
+  const onClickNavigate = (key) => {
+        switch (key) {
+            case 'home':
+                setFeedPage('feed');
+                break;
+            case 'search':
+                break;
+            case 'create':
+                feedCreateModalOpen();
+                break;
+            case 'profile':
+                setFeedPage('profile');
+                break;
+            default:
+                break;
+        }
 
-  const handleItemClick = (key) => {
-    if (onNavigate) {
-      onNavigate(key);
-    }
-  };
+        console.log("Navigating to:", key);
+    };
 
   return (
     <NavigationContainer>
@@ -153,7 +171,7 @@ const Navigation = ({ activeItem = 'home', onNavigate, profileImage }) => {
           <NavItem key={item.key}>
             <NavLink
               className={activeItem === item.key ? 'active' : ''}
-              onClick={() => handleItemClick(item.key)}
+              onClick={() => onClickNavigate(item.key)}
             >
               <IconContainer>{item.icon}</IconContainer>
               {item.label}
@@ -163,7 +181,7 @@ const Navigation = ({ activeItem = 'home', onNavigate, profileImage }) => {
         <NavItem>
           <NavLink
             className={activeItem === 'profile' ? 'active' : ''}
-            onClick={() => handleItemClick('profile')}
+            onClick={() => onClickNavigate('profile')}
           >
             <IconContainer>
               {profileImage ? (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { X } from 'lucide-react';
 import FileUploadComponent from '../upload/FileUploadComponent';
@@ -323,12 +323,68 @@ const SlideAreaRight = styled(SlideArea)`
 `;
 
 const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) => {
-  if (!isOpen) return null;
+  const modalRef = useRef(null);
+  const textAreaRef = useRef(null);
   const [files, setFiles] = useState([]);
   const [step, setStep] = useState(1);
   const [content, setContent] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previewURL, setPreviewURL] = useState("");
+  const [hashtagActive, setHashtagActive] = useState(false);
+  const [hashtagQuery, setHashtagQuery] = useState("");
+  const [hashtagResults, setHashtagResults] = useState([]);
+
+  const handleClose = () => {
+      setFiles([]);
+      setStep(1);
+      setContent("");
+      onClose();
+  }
+
+  // ESC 키로 닫기
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen]);
+
+  // 바깥 클릭으로 닫기 + 해시태그 검색 비활성화
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(e.target) &&
+        hashtagActive
+      ) {
+        setHashtagActive(false);
+        setHashtagQuery("");
+        setHashtagResults([]);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [hashtagActive, isOpen]);
+
+  // 해시태그 검색 API 호출
+  useEffect(() => {
+    if (hashtagActive && hashtagQuery.length > 0) {
+      // TODO : 해시태그 검색 API 호출
+      console.log("[debug] FeedCreationModal hashtagQuery : ", hashtagQuery);
+      // api.get("/api/v1/hashtag", { params: { hashtag: hashtagQuery } })
+      //   .then(res => setHashtagResults(res.data))
+      //   .catch(() => setHashtagResults([]));
+      // 해시태그 결과물 임시 데이터
+
+      setHashtagResults(prev => [...prev, { id: 1, name: "example", count: 1234 }]);
+    } else {
+      setHashtagResults([]);
+    }
+  }, [hashtagQuery, hashtagActive]);
 
   useEffect(() => {
     if (files.length === 0) {
@@ -381,15 +437,68 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
         'Content-Type': 'multipart/form-data'
       }
     });
-    onClose();
+    handleClose();
+  };
+  const closeHashtagSearch = () => {
+    setHashtagActive(false);
+    setHashtagQuery("");
+    setHashtagResults([]);
+  };
+  const handleContentChange = (e) => {
+    const value = e.target.value;
+    setContent(value);
+    const cursorPosition = e.target.selectionStart;
+    const hashIndex = value.lastIndexOf('#', cursorPosition - 1);
+    // 해시태그 시작 감지
+    if (hashIndex !== -1 ) {
+      const beforeCursor = value.substring(hashIndex, cursorPosition);
+      // hashtag 뒤에 공백이 있을 경우 해시태그로 인식하지 않음
+      if (value[cursorPosition] === ' ') {
+        closeHashtagSearch();
+        return;
+      }
+      if(beforeCursor.includes(' ')) {
+        closeHashtagSearch();
+        return;
+      }
+
+      const hashtagMatch = beforeCursor.match(/^#([\u3131-\u3163\uac00-\ud7a3\w]+)$/);
+      setHashtagActive(true);
+      console.log(hashtagMatch[1]);
+      setHashtagQuery(hashtagMatch ? hashtagMatch[1] : "");
+      
+    } else {
+      setHashtagActive(false);
+      setHashtagQuery("");
+      setHashtagResults([]);
+    }
+  }
+  // 공백 입력 시 해시태그 비활성화
+  const handleContentKeyDown = (e) => {
+    const value = e.target.value;
+    if (hashtagActive && (e.key === " " || e.key === "Enter")) {
+      setHashtagActive(false);
+      setHashtagQuery("");
+      setHashtagResults([]);
+    }
   };
 
+  const handleOverlayClick = (e) => {
+    // Overlay 영역 클릭 시 모달 닫기 및 해시태그 검색 비활성화
+    if (e.target === e.currentTarget) {
+      setHashtagActive(false);
+      setHashtagQuery("");
+      setHashtagResults([]);
+      handleClose();
+    }
+  };
+
+
+  if (!isOpen) return null;
+
   return (
-    <Overlay>
-      <Modal step={step}>
-        <CloseButton onClick={onClose}>
-          <X size={20} color="#6b7280" />
-        </CloseButton>
+    <Overlay ref={modalRef} onClick={handleOverlayClick}>
+      <Modal step={step} ref={modalRef}>
         {step === 2 ? (
           <TopBar>
             <BackButton onClick={handleBackToStep1} title="뒤로가기">
@@ -497,10 +606,60 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
               </LeftBox>
               <RightBox>
                 <TextArea
+                  ref={textAreaRef}
                   placeholder="문구를 입력하세요..."
                   value={content}
-                  onChange={e => setContent(e.target.value)}
+                  onChange={(e) => handleContentChange(e)}
+                  onKeyDown={handleContentKeyDown}
                 />
+                {/* 해시태그 검색 영역 */}
+                {hashtagActive && (
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      background: "#fff",
+                      border: "1px solid #eee",
+                      borderRadius: "8px",
+                      marginTop: "8px",
+                      maxHeight: "180px",
+                      overflowY: "auto",
+                      zIndex: 100,
+                    }}
+                  >
+                    {hashtagResults.length === 0 ? (
+                      <div style={{ padding: "12px", color: "#888" }}>
+                        검색 결과가 없습니다.
+                      </div>
+                    ) : (
+                      hashtagResults.map((tag, idx) => (
+                        <div
+                          key={tag.id || idx}
+                          style={{
+                            padding: "10px 16px",
+                            borderBottom: "1px solid #f3f3f3",
+                            cursor: "pointer",
+                          }}
+                          onMouseDown={() => {
+                            // 해시태그 선택 시 textarea에 삽입
+                            const before = content.replace(/#\w*$/, `#${tag.name} `);
+                            setContent(before);
+                            setHashtagActive(false);
+                            setHashtagQuery("");
+                            setHashtagResults([]);
+                            // textarea에 focus 유지
+                            setTimeout(() => textAreaRef.current?.focus(), 0);
+                          }}
+                        >
+                          <span style={{ fontWeight: 500, color: "#3b82f6" }}>#{tag.name}</span>
+                          <span style={{ marginLeft: 8, color: "#888", fontSize: 13 }}>
+                            게시물 {tag.count?.toLocaleString() || 0}개
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </RightBox>
             </>
           )}

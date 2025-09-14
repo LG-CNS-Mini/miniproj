@@ -111,7 +111,7 @@ const SignInPage = () => {
                 );
                 // token
                 localStorage.setItem(
-                    "accessToken",
+                "accessToken",
                     response.headers.get("authorization")
                 );
                 localStorage.setItem(
@@ -121,6 +121,7 @@ const SignInPage = () => {
                 // user
                 localStorage.setItem("userInfo", response.data.name);
                 localStorage.setItem("userEmail", response.data.email);
+                localStorage.setItem("userImageUrl", response.data.userImageUrl);
 
                 moveUrl("/main");
             })
