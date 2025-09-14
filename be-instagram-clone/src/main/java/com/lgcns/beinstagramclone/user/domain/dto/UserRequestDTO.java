@@ -29,6 +29,8 @@ public class UserRequestDTO {
     @NotNull(message = "이름을 입력해주세요.")
     private String name     ;
 
+    private String userImageUrl;
+
     // factory method pattern
     // dto -> entity
     public UserEntity toEntity() {
@@ -36,6 +38,7 @@ public class UserRequestDTO {
                     .email(email)
                     .passwd(passwd)
                     .name(name)
+                    .userImageUrl(userImageUrl)
                     .build();
     }
 }

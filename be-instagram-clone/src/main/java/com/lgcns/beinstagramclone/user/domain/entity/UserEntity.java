@@ -45,6 +45,9 @@ public class UserEntity {
     @Column(nullable = false, length = 50)
     private String name     ;
 
+    @Column(length = 500)
+    private String userImageUrl;
+
     @OneToMany(mappedBy="author",cascade = CascadeType.ALL, orphanRemoval = false)
     @JsonManagedReference
     private List<PostEntity> posts = new ArrayList<>();
