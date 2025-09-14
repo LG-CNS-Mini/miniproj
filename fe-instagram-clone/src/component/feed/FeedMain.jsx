@@ -24,7 +24,7 @@ const FeedMain = ({feedPage}) => {
 
     return (
         <>
-            {feedPage === 'feed' ? <FeedMain/> : null}
+            {feedPage === 'feed'    ? <FeedMain/> : null}
             {feedPage === 'profile' ? <ProfileMain/>: null}
         </>
     )
