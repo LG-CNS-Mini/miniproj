@@ -322,6 +322,42 @@ const SlideAreaRight = styled(SlideArea)`
   right: 0;
 `;
 
+const HashtagDropdown = styled.div`
+  position: relative;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-top: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 100;
+`;
+
+const HashtagResult = styled.div`
+  padding: 10px 16px;
+  border-bottom: 1px solid #f3f3f3;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+`;
+
+const HashtagName = styled.span`
+  font-weight: 500;
+  color: #3b82f6;
+`;
+
+const HashtagCount = styled.span`
+  margin-left: 8px;
+  color: #888;
+  font-size: 13px;
+`;
+
+const HashtagEmpty = styled.div`
+  padding: 12px;
+  color: #888;
+`;
+
 const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) => {
   const modalRef = useRef(null);
   const textAreaRef = useRef(null);
@@ -493,8 +529,25 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
     }
   };
 
-
   if (!isOpen) return null;
+
+  const handlerGetHashTag = () => {
+    const formData = new FormData();
+
+    files.forEach((file, i) => {
+      formData.append(`postImages[${i}]`, file);
+    });
+
+    // TODO : AI를 통한 해시태그 추출 API 호출
+    // api.post("/api/v1/post/AI/Hashtag", formData, {
+    //   headers: {
+    //     'Content-Type': 'multipart/form-data'
+    //   }
+    // }).then(response => {
+    //   console.log("해시태그 등록 결과 : ", response.data);
+    // });
+  }
+
 
   return (
     <Overlay ref={modalRef} onClick={handleOverlayClick}>
@@ -614,52 +667,34 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
                 />
                 {/* 해시태그 검색 영역 */}
                 {hashtagActive && (
-                  <div
-                    style={{
-                      position: "relative",
-                      width: "100%",
-                      background: "#fff",
-                      border: "1px solid #eee",
-                      borderRadius: "8px",
-                      marginTop: "8px",
-                      maxHeight: "180px",
-                      overflowY: "auto",
-                      zIndex: 100,
-                    }}
-                  >
+                  <HashtagDropdown>
                     {hashtagResults.length === 0 ? (
-                      <div style={{ padding: "12px", color: "#888" }}>
+                      <HashtagEmpty>
                         검색 결과가 없습니다.
-                      </div>
+                      </HashtagEmpty>
                     ) : (
                       hashtagResults.map((tag, idx) => (
-                        <div
+                        <HashtagResult
                           key={tag.id || idx}
-                          style={{
-                            padding: "10px 16px",
-                            borderBottom: "1px solid #f3f3f3",
-                            cursor: "pointer",
-                          }}
                           onMouseDown={() => {
-                            // 해시태그 선택 시 textarea에 삽입
                             const before = content.replace(/#\w*$/, `#${tag.name} `);
                             setContent(before);
                             setHashtagActive(false);
                             setHashtagQuery("");
                             setHashtagResults([]);
-                            // textarea에 focus 유지
                             setTimeout(() => textAreaRef.current?.focus(), 0);
                           }}
                         >
-                          <span style={{ fontWeight: 500, color: "#3b82f6" }}>#{tag.name}</span>
-                          <span style={{ marginLeft: 8, color: "#888", fontSize: 13 }}>
+                          <HashtagName>#{tag.name}</HashtagName>
+                          <HashtagCount>
                             게시물 {tag.count?.toLocaleString() || 0}개
-                          </span>
-                        </div>
+                          </HashtagCount>
+                        </HashtagResult>
                       ))
                     )}
-                  </div>
+                  </HashtagDropdown>
                 )}
+              <Button onClick={handlerGetHashTag}>해시태그 추출</Button>
               </RightBox>
             </>
           )}

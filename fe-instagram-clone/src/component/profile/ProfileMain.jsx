@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import api from "../../api/axios";
+import FeedReadModal from "./FeedReadModal";
 
 // 스타일 컴포넌트
 const Container = styled.div`
@@ -81,9 +82,10 @@ const ProfileMain = () => {
     profileImage: localStorage.getItem("userImageUrl") || "",
   });
   const [posts, setPosts] = useState([]);
-
+  const [isFeedReadOpen, setIsFeedReadOpen] = useState(false);  
   const userId = localStorage.getItem("userEmail");
   const userImageUrl = localStorage.getItem("userImageUrl");
+  const [selectedPostId, setSelectedPostId] = useState(null);
 
   useEffect(() => {
     // 프로필 정보 가져오기 (예시: userName, 팔로워, 팔로우, 게시물 수)
@@ -103,13 +105,25 @@ const ProfileMain = () => {
       params: { page: 1, size: 10 }
     })
       .then(res => {
-        console.log(res);
+        console.log(res.data);
         setPosts(res.data || []);
       });
   }, [userId, userImageUrl]);
 
+  const handlePostClick = (postId) => {
+    console.log("Post clicked:", postId);
+    // FeedReadModal 열기 로직 추가
+    setSelectedPostId(postId);
+    setIsFeedReadOpen(true);
+  }
+
   return (
     <Container>
+        <FeedReadModal
+            postId={selectedPostId}
+            isOpen={isFeedReadOpen}
+            onClose={() => setIsFeedReadOpen(false)}
+        />
       <ProfileHeader>
         <ProfileImage
           src={profile.profileImage ? `${baseURL}${profile.profileImage}` : "/default-profile.png"}
@@ -127,10 +141,13 @@ const ProfileMain = () => {
       </ProfileHeader>
       <PostGrid>
         {posts.map(post => (
-          <PostItem key={post.id}>
+          <PostItem 
+            onClick={() => handlePostClick(post.postID)} 
+            key={post.postID}
+          >
             <PostImage
-              src={post.images && post.images.length > 0
-                ? `${baseURL}/${post.images[0]}`
+              src={post.imageUrls && post.imageUrls.length > 0
+                ? `${baseURL}${post.imageUrls[0]}`
                 : "/default-post.png"}
               alt="post"
             />
