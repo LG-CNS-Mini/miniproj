@@ -18,7 +18,7 @@
 https://github.com/Instagram-Clone-Coding
 
 ## ERD
-https://www.erdcloud.com/d/ufv5P5mkEhpe2iStd
+https://www.erdcloud.com/d/7428hRcao5sKMD3gu
 
 ## Security
 https://github.com/do5do/funding
