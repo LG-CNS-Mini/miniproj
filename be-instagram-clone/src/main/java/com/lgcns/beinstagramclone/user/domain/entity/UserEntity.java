@@ -39,7 +39,7 @@ public class UserEntity {
     @Id
     private String email    ;
 
-    @Column(unique = true, nullable = false, length = 50)
+    @Column(nullable = false, length = 50)
     private String passwd   ;
 
     @Column(nullable = false, length = 50)
