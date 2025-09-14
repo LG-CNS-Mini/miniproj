@@ -16,9 +16,12 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ImageService {
-    
+
     @Autowired
     private ImageRepository imageRepository;
+
+    @Autowired
+    private ImageAIService imageAIService;
 
     public List<ImageResponseDTO> upload(List<MultipartFile> files, String projectRoot) throws Exception {
         String day = java.time.LocalDate.now().toString(); // 2025-09-11
@@ -26,19 +29,25 @@ public class ImageService {
         java.nio.file.Files.createDirectories(dir);
 
         List<ImageResponseDTO> out = new java.util.ArrayList<>();
+
         for (MultipartFile f : files) {
             String ext = java.util.Optional.ofNullable(f.getOriginalFilename())
                     .filter(n -> n.contains("."))
                     .map(n -> n.substring(n.lastIndexOf('.')))
                     .orElse(".bin");
+
             String name = java.util.UUID.randomUUID() + ext;
             java.nio.file.Path save = dir.resolve(name);
             f.transferTo(save.toFile());
 
             String url = "/uploads/" + day + "/" + name;
             ImageEntity saved = imageRepository.save(ImageEntity.builder().imageUrl(url).build());
-            out.add(new ImageResponseDTO(saved.getImageId(), saved.getImageUrl()));
+
+            List<String> hashtags = imageAIService.analyzeImage(f);
+
+            out.add(new ImageResponseDTO(saved.getImageId(), saved.getImageUrl(), hashtags));
         }
         return out;
     }
+
 }
