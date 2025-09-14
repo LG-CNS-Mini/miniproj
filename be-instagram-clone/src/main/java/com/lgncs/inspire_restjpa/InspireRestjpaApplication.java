@@ -9,11 +9,9 @@ import io.github.cdimascio.dotenv.Dotenv;
 public class InspireRestjpaApplication {
 
 	public static void main(String[] args) {
-		
+
 		Dotenv env = Dotenv.configure().ignoreIfMissing().load();
-		env.entries().forEach(entry -> 
-			System.setProperty(entry.getKey(), entry.getValue())
-		);
+		env.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 
 		SpringApplication.run(InspireRestjpaApplication.class, args);
 	}
