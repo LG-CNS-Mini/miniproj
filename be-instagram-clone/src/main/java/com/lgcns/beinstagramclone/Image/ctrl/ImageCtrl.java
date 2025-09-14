@@ -25,6 +25,6 @@ public class ImageCtrl {
         List<String> result = imageAIService.analyzeImage(image);
 
         return ResponseEntity.ok().body(result);
-        ///
+
     }
 }
