@@ -105,6 +105,7 @@ public class JwtFilter implements Filter{
                 ||  path.startsWith("/api/v2/inspire/sse/subscribe")
                 ||  path.startsWith("/api/v2/inspire/sse/notifications")
                 ||  path.startsWith("/api/v1/post")
+                ||  path.startsWith("/images/")
                 ;
                 
     }
