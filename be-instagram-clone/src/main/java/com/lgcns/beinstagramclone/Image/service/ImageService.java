@@ -20,9 +20,6 @@ public class ImageService {
     @Autowired
     private ImageRepository imageRepository;
 
-    @Autowired
-    private ImageAIService imageAIService;
-
     public List<ImageResponseDTO> upload(List<MultipartFile> files, String projectRoot) throws Exception {
         String day = java.time.LocalDate.now().toString(); // 2025-09-11
         Path dir = java.nio.file.Paths.get(projectRoot, "uploads", day);
@@ -43,7 +40,7 @@ public class ImageService {
             String url = "/uploads/" + day + "/" + name;
             ImageEntity saved = imageRepository.save(ImageEntity.builder().imageUrl(url).build());
 
-            List<String> hashtags = imageAIService.analyzeImage(f);
+            List<String> hashtags = java.util.Collections.emptyList();
 
             out.add(new ImageResponseDTO(saved.getImageId(), saved.getImageUrl(), hashtags));
         }
