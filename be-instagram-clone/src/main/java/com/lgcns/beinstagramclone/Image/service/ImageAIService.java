@@ -1,7 +1,6 @@
 package com.lgcns.beinstagramclone.Image.service;
 
 import java.util.*;
-import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,10 +35,11 @@ public class ImageAIService {
 
             String prompt = """
                     너는 전문 이미지 분석가야. 아래 이미지를 보고 연관된 해시태그를 5개 JSON 형식으로 추출해줘.
-                    다른 설명은 하지 말고 아래 형식처럼 JSON만 응답해.
+                    JSON 형식의 객체 하나만 응답해. 배열([])을 포함하지 마. 오직 아래 형식으로만 응답해:
                     {
-                        "hashtags": ["#예시1", "#예시2", "..."]
+                        "hashtags": ["#예시1", "#예시2", "#예시3", "#예시4", "#예시5"]
                     }
+                    그 외 다른 문자는 절대 포함하지 마.
                     """;
 
             Map<String, Object> userMsg = new HashMap<>();
