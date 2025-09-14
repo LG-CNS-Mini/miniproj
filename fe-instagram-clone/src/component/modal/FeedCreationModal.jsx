@@ -535,17 +535,22 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
     const formData = new FormData();
 
     files.forEach((file, i) => {
-      formData.append(`postImages[${i}]`, file);
+      formData.append(`images[${i}]`, file);
     });
 
     // TODO : AI를 통한 해시태그 추출 API 호출
-    // api.post("/api/v1/post/AI/Hashtag", formData, {
-    //   headers: {
-    //     'Content-Type': 'multipart/form-data'
-    //   }
-    // }).then(response => {
-    //   console.log("해시태그 등록 결과 : ", response.data);
-    // });
+    api.post("/api/v1/post/ai/hashtag", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }).then(response => {
+      console.log("해시태그 등록 결과 : ", response.data);
+      // 추출된 해시태그를 content에 추가 
+      const hashtags = response.data.map(item => item.hashtags).flat();
+      const uniqueHashtags = Array.from(new Set(hashtags));
+      const hashtagString = uniqueHashtags.join(" ");
+      setContent(prev => prev + (prev ? " " : "") + hashtagString);
+    });
   }
 
 
