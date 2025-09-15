@@ -84,22 +84,23 @@ const ProfileMain = ({profileUser}) => {
   const [posts, setPosts] = useState([]);
   const [userId, setUserId] = useState(profileUser || localStorage.getItem("userEmail"));
   const [isFeedReadOpen, setIsFeedReadOpen] = useState(false);  
-  const [userImageUrl, setUserImageUrl] = useState(profileUser ? "" : localStorage.getItem("userImageUrl"));
+  const [userImageUrl, setUserImageUrl] = useState("");
   const [selectedPostId, setSelectedPostId] = useState(null);
 
   useEffect(() => {
     // TODO : API 호출하여 프로필 정보 가져오기
     // 프로필 정보 가져오기 (예시: userName, 팔로워, 팔로우, 게시물 수)
-    // api.get(`/api/v1/user/${userId}`)
-    //   .then(res => {
-    //     setProfile({
-    //       userName: res.data.userName,
-    //       postCount: res.data.postCount,
-    //       followerCount: res.data.followerCount,
-    //       followingCount: res.data.followingCount,
-    //       profileImage: res.data.profileImage || userImageUrl,
-    //     });
-    //   });
+    api.get(`/api/v1/user/${userId}`)
+      .then(res => {
+        console.log(res.data);
+        // setProfile({
+        //   userName: res.data.userName,
+        //   postCount: res.data.postCount,
+        //   followerCount: res.data.followerCount,
+        //   followingCount: res.data.followingCount,
+        //   profileImage: res.data.profileImage || userImageUrl,
+        // });
+      });
 
     // 게시글 목록 페이징 처리
     selectPosts();
