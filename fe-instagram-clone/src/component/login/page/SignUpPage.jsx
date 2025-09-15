@@ -86,12 +86,13 @@ const SignUpPage = () => {
     const [passwd, setPasswd] = useState("");
     const [confirmPasswd, setConfirmPasswd] = useState("");
     const [name, setName] = useState("");
+    const [nickname, setNickname] = useState("");
 
     const moveUrl = useNavigate();
 
-    const handleSubmit = async (e, email, passwd, name) => {
+    const handleSubmit = async (e, email, passwd, name, nickname) => {
         e.preventDefault();
-        console.log(">>>>>>>>>>> ", email, passwd, name);
+        console.log(">>>>>>>>>>> ", email, passwd, name, nickname);
 
         if (passwd !== confirmPasswd) {
             alert("비밀번호가 일치하지 않습니다.");
@@ -101,7 +102,7 @@ const SignUpPage = () => {
         // 여기서 API 호출 가능 axios post : data(emai, passwd, name)
         // 1. 유효성 체크
         // 2. 정상적인 데이터 입력시 화면전환 /signin 이동
-        const data = { email, passwd, name };
+        const data = { email, passwd, name, nickname };
         await api
             .post("/api/v2/inspire/user/signup", data)
             .then((response) => {
@@ -158,9 +159,21 @@ const SignUpPage = () => {
                     }}
                     required
                 />
+                <Input
+                    type="text"
+                    name="nickname"
+                    placeholder="닉네임"
+                    value={nickname}
+                    onChange={(e) => {
+                        setNickname(e.target.value);
+                    }}
+                    required
+                />
                 <Button
                     type="button"
-                    onClick={(e) => handleSubmit(e, email, passwd, name)}
+                    onClick={(e) =>
+                        handleSubmit(e, email, passwd, name, nickname)
+                    }
                 >
                     가입하기
                 </Button>

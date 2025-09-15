@@ -1,6 +1,7 @@
 package com.lgcns.beinstagramclone.user.service;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,20 +37,21 @@ public class OAuth2DetailsService extends DefaultOAuth2UserService{
             String email = (String) userInfo.get("email");
             String name = (String) userInfo.get("name");
             
-            UserEntity userEntity = userRepository.findByEmail(email);
+            Optional<UserEntity> userEntity = userRepository.findByEmail(email);
             
-            if(userEntity == null) { // 회원이 아닐시
+            if(userEntity.isEmpty()) { // 회원이 아닐시
                 System.out.println("[debug]>>> OAuth2 회원 가입"); 
                 UserEntity user = UserEntity.builder()
                         .passwd(password)
                         .email(email)
                         .name(name)
+                        .nickname(name)
                         .build();
                 userRepository.save(user);
                 return new CustomOAuth2User(user, oauth2User.getAttributes());
             }else { // 회원일시
                 System.out.println("[debug]>>> OAuth2 회원 로그인"); 
-                return new CustomOAuth2User(userEntity, oauth2User.getAttributes());
+                return new CustomOAuth2User(userEntity.get(), oauth2User.getAttributes());
             }
         }
         catch(Exception e) {    
