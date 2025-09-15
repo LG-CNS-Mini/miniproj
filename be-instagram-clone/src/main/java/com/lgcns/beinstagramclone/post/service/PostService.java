@@ -89,6 +89,7 @@ public class PostService {
         return PostResponseDTO.fromEntity(post);
     }
 
+
     @Transactional
     public int update(Integer id, PostRequestDTO post) {
         PostEntity postEntity = postRepository.findById(id)

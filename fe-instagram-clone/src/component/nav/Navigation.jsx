@@ -140,6 +140,7 @@ const Navigation = ({ activeItem = 'home', profileImage, feedCreateModalOpen, se
     { key: 'create', label: '만들기', icon: <CreateIcon /> },
   ];
   // TODO : profileImage 불러오기
+  const userImageUrl = localStorage.getItem("userImageUrl") ? `${import.meta.env.VITE_APP_JSON_SERVER_URL}${localStorage.getItem("userImageUrl")}` : null;
   const userId = localStorage.getItem('userEmail');
   
   const moveURL = useNavigate();
@@ -184,8 +185,8 @@ const Navigation = ({ activeItem = 'home', profileImage, feedCreateModalOpen, se
             onClick={() => onClickNavigate('profile')}
           >
             <IconContainer>
-              {profileImage ? (
-                <ProfileImage src={profileImage} alt="프로필" />
+              {userImageUrl ? (
+                <ProfileImage src={userImageUrl} alt="프로필" />
               ) : (
                 <div style={{ 
                   width: '24px', 

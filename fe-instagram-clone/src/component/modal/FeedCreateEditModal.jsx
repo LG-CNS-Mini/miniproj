@@ -358,11 +358,11 @@ const HashtagEmpty = styled.div`
   color: #888;
 `;
 
-const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) => {
+const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
   const modalRef = useRef(null);
   const textAreaRef = useRef(null);
   const [files, setFiles] = useState([]);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(postId ? 2: 1);
   const [content, setContent] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previewURL, setPreviewURL] = useState("");
@@ -440,6 +440,20 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
     }
   }, [files, currentIndex]);
 
+  useEffect(() => {
+    if(postId){
+      api.get(`/api/v1/post/read/${postId}`)
+        .then(res => {
+          setContent(res.data.content);
+          // TODO : 해시태그 가져와서 content에 반영
+          if(res.data.imageUrls && res.data.imageUrls.length > 0){
+            setFiles(res.data.imageUrls.map(imgUrl => `${import.meta.env.VITE_APP_JSON_SERVER_URL}${imgUrl}`));
+            setPreviewURL(`${import.meta.env.VITE_APP_JSON_SERVER_URL}${res.data.imageUrls[0]}`);
+          }
+        });
+    }
+  }, []);
+
   const handlePrev = () => {
     if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
   };
@@ -456,7 +470,16 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
     setStep(1);
   };
 
-  const handleShare = () => {
+  const handleSave = () => {
+    if(postId){
+      updatePost();
+    }else{
+      insertPost();
+      handleClose();
+    }
+  };
+
+  const insertPost = () => {
     const formData = new FormData();
 
     // content 추가
@@ -467,14 +490,25 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
       // 파일 이름 지정 (예: file0.png, file1.png ...)
       formData.append(`postImages[${i}]`, file);
     });
-
     api.post("/api/v1/post/register", formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
-    handleClose();
-  };
+  }
+  const updatePost = () => {
+    const formData = new FormData();
+    formData.append("content", content);
+    formData.append("authorEmail", localStorage.getItem("userEmail"));
+    files.forEach((file, i) => {
+      formData.append(`postImages[${i}]`, file);
+    });
+    api.put(`/api/v1/post/update/${postId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
   const closeHashtagSearch = () => {
     setHashtagActive(false);
     setHashtagQuery("");
@@ -500,7 +534,6 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
 
       const hashtagMatch = beforeCursor.match(/^#([\u3131-\u3163\uac00-\ud7a3\w]+)$/);
       setHashtagActive(true);
-      console.log(hashtagMatch[1]);
       setHashtagQuery(hashtagMatch ? hashtagMatch[1] : "");
       
     } else {
@@ -544,7 +577,6 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
         'Content-Type': 'multipart/form-data'
       }
     }).then(response => {
-      console.log("해시태그 등록 결과 : ", response.data);
       // 추출된 해시태그를 content에 추가 
       const hashtags = response.data.map(item => item.hashtags).flat();
       const uniqueHashtags = Array.from(new Set(hashtags));
@@ -553,6 +585,7 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
     });
   }
 
+  
 
   return (
     <Overlay ref={modalRef} onClick={handleOverlayClick}>
@@ -565,8 +598,8 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
             <Header style={{ margin: 0, flex: 1, textAlign: 'center' }}>
               새 게시물 만들기
             </Header>
-            <ShareButton onClick={handleShare}>
-              공유하기
+            <ShareButton onClick={handleSave}>
+              {postId ? "수정하기" : "공유하기"}
             </ShareButton>
           </TopBar>
         ) : (
@@ -613,11 +646,13 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
                       </SlideAreaLeft>
                     )}
                     <PreviewBox style={{ marginTop: 0 }}>
-                      <img
-                        src={previewURL}
-                        alt="preview"
-                        style={{ width: "100%", height: "auto" }}
-                      />
+                      {previewURL && 
+                        <img
+                          src={previewURL}
+                          alt="preview"
+                          style={{ width: "100%", height: "auto" }}
+                        />  
+                      }
                     </PreviewBox>
                     {currentIndex < files.length - 1 && (
                       <SlideAreaRight>
@@ -709,4 +744,4 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
   );
 };
 
-export default FeedCreationModal;
+export default FeedCreateEditModal;

@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import Navigation from "../component/nav/Navigation";
-import FeedCreationModal from "../component/modal/FeedCreationModal";
 import { useState } from "react";
 import { useRef } from 'react';
 import FeedMain from "../component/feed/FeedMain";
+import FeedCreateEditModal from "../component/modal/FeedCreateEditModal";
 
 const FeedPage = () => {
     const moveURL = useNavigate();
@@ -19,10 +19,9 @@ const FeedPage = () => {
                 setFeedPage={setFeedPage}
                 feedCreateModalOpen={feedCreateModalOpen} 
             />
-            <FeedCreationModal
+            <FeedCreateEditModal
                 isOpen={isFeedCreateOpen}
                 onClose={handleFeedCreateClose}
-                onCreateStory={(event) => { handleButtonClick(event) }}
             />
             <FeedMain feedPage={feedPage} />
         </>
