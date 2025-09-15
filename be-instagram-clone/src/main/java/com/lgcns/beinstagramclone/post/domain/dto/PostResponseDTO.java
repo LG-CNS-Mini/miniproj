@@ -24,22 +24,30 @@ public class PostResponseDTO {
 
     private Integer postID;
     private String content;
-    private String hashtag;
+
+    // ✅ 단일 문자열 → 리스트로 변경
+    private List<String> hashtags;
+
     private LocalDateTime createDate;
     private String authorEmail;
     private List<String> imageUrls;
 
     public static PostResponseDTO fromEntity(PostEntity post) {
-        List<String> urls = post.getImages() == null ? List.of()
+        List<String> urls = (post.getImages() == null) ? List.of()
                 : post.getImages().stream()
                         .sorted(Comparator.comparing(PostImageEntity::getSortOrder))
                         .map(pi -> pi.getImage().getImageUrl())
+                        .toList();
+        List<String> tags = (post.getTags() == null) ? List.of()
+                : post.getTags().stream()
+                        .map(tag -> tag.getHashtag().getName())
+                        .distinct() 
                         .toList();
 
         return PostResponseDTO.builder()
                 .postID(post.getPostID())
                 .content(post.getContent())
-                .hashtag(post.getHashtag())
+                .hashtags(tags) 
                 .createDate(post.getCreateDate())
                 .authorEmail(post.getAuthor().getEmail())
                 .imageUrls(urls)

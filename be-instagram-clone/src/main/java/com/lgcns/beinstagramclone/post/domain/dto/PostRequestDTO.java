@@ -24,15 +24,15 @@ import lombok.ToString;
 @ToString
 public class PostRequestDTO {
     private String content;
-    private String hashtag;
+    private List<String> hashtags = new ArrayList<>();
 
     private String authorEmail;
+
     private List<MultipartFile> postImages = new ArrayList<>();
 
     public PostEntity toEntity(UserEntity author) {
         return PostEntity.builder()
                 .content(this.content)
-                .hashtag(this.hashtag)
                 .author(author)
                 .build();
     }
