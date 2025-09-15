@@ -229,6 +229,7 @@ const Navigation = ({
         setSearchMode(false);
         break;
       case 'profile':
+        setProfileUser(null);
         setFeedPage('profile');
         setSearchMode(false);
         break;
@@ -237,14 +238,14 @@ const Navigation = ({
     }
   };
 
-  // 사용자 정보 검색 (예시: api.get("/api/v2/inspire/user/suggest", { params: { query: searchQuery } }))
   const handleSearch = (e) => {
     const keyword = e.target.value;
     setSearchQuery(keyword);
     if (keyword.trim().length > 0) {
-      api.get("/api/v2/inspire/user/suggest", { params: { query: keyword } })
+      api.get("/api/v2/inspire/user/suggest", { params: { query: keyword }, headers:{
+        Authorization: `${localStorage.getItem("accessToken")}`
+      } })
       .then((res) => {
-        console.log(res.data);
         setSearchResult(res.data);
       }).catch((err) => {
         setSearchResult([]);

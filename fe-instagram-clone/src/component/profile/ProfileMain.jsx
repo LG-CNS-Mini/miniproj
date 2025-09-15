@@ -72,7 +72,7 @@ const PostImage = styled.img`
   object-fit: cover;
 `;
 
-const ProfileMain = () => {
+const ProfileMain = ({profileUser}) => {
   const baseURL = "http://localhost:8088"; // 실제 이미지 서버 주소로 변경 필요
   const [profile, setProfile] = useState({
     userName: "",
@@ -82,12 +82,13 @@ const ProfileMain = () => {
     profileImage: localStorage.getItem("userImageUrl") || "",
   });
   const [posts, setPosts] = useState([]);
+  const [userId, setUserId] = useState(profileUser || localStorage.getItem("userEmail"));
   const [isFeedReadOpen, setIsFeedReadOpen] = useState(false);  
-  const userId = localStorage.getItem("userEmail");
-  const userImageUrl = localStorage.getItem("userImageUrl");
+  const [userImageUrl, setUserImageUrl] = useState(profileUser ? "" : localStorage.getItem("userImageUrl"));
   const [selectedPostId, setSelectedPostId] = useState(null);
 
   useEffect(() => {
+    // TODO : API 호출하여 프로필 정보 가져오기
     // 프로필 정보 가져오기 (예시: userName, 팔로워, 팔로우, 게시물 수)
     // api.get(`/api/v1/user/${userId}`)
     //   .then(res => {
