@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.lgcns.beinstagramclone.domain.dto.SliceResponseDTO;
 import java.util.List;
 
 @Service
@@ -17,13 +17,11 @@ public class PostService {
 
     private final PostRepository postRepository;
 
-    // 최신 N개
-    public List<PostListItemDTO> getLatest(int size) {
-        return postRepository.findLatestSummaries(PageRequest.of(0, size)).getContent();
-    }
-
-    // 페이징 버전(옵션)
-    public Page<PostListItemDTO> getLatestPaged(int page, int size) {
-        return postRepository.findLatestSummaries(PageRequest.of(page, size));
+    public SliceResponseDTO<PostListItemDTO> getFollowedFeed(String myEmail, int page, int size, boolean includeMe) {
+        var pageable = PageRequest.of(page, size);
+        var slice = includeMe
+                ? postRepository.findFollowedFeedIncludingMe(myEmail, pageable)
+                : postRepository.findFollowedFeed(myEmail, pageable);
+        return new SliceResponseDTO<>(slice.getContent(), page, size, slice.hasNext());
     }
 }

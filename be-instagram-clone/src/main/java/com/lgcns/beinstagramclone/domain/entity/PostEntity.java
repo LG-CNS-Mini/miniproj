@@ -16,7 +16,7 @@ public class PostEntity {
     @Column(name = "post_id")
     private Long postId;   // 게시물아이디 (PK)
 
-    // 회원아이디 (FK → user_entity.email)
+    // 회원아이디 (user_entity.email)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "email", referencedColumnName = "email")
     private UserEntity author;
