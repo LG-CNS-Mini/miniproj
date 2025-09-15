@@ -358,22 +358,24 @@ const HashtagEmpty = styled.div`
   color: #888;
 `;
 
-const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) => {
+const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
   const modalRef = useRef(null);
   const textAreaRef = useRef(null);
   const [files, setFiles] = useState([]);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(postId ? 2: 1);
   const [content, setContent] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previewURL, setPreviewURL] = useState("");
   const [hashtagActive, setHashtagActive] = useState(false);
   const [hashtagQuery, setHashtagQuery] = useState("");
+  const [hashtagSearchResults, setHashtagSearchResults] = useState([]);
   const [hashtagResults, setHashtagResults] = useState([]);
 
   const handleClose = () => {
       setFiles([]);
       setStep(1);
       setContent("");
+      setHashtagResults([]);
       onClose();
   }
 
@@ -399,7 +401,7 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
       ) {
         setHashtagActive(false);
         setHashtagQuery("");
-        setHashtagResults([]);
+        setHashtagSearchResults([]);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -412,13 +414,13 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
       // TODO : 해시태그 검색 API 호출
       console.log("[debug] FeedCreationModal hashtagQuery : ", hashtagQuery);
       // api.get("/api/v1/hashtag", { params: { hashtag: hashtagQuery } })
-      //   .then(res => setHashtagResults(res.data))
-      //   .catch(() => setHashtagResults([]));
+      //   .then(res => setHashtagSearchResults(res.data))
+      //   .catch(() => setHashtagSearchResults([]));
       // 해시태그 결과물 임시 데이터
 
-      setHashtagResults(prev => [...prev, { id: 1, name: "example", count: 1234 }]);
+      setHashtagSearchResults(prev => [...prev, { id: 1, name: "example", count: 1234 }]);
     } else {
-      setHashtagResults([]);
+      setHashtagSearchResults([]);
     }
   }, [hashtagQuery, hashtagActive]);
 
@@ -440,6 +442,20 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
     }
   }, [files, currentIndex]);
 
+  useEffect(() => {
+    if(postId){
+      api.get(`/api/v1/post/read/${postId}`)
+        .then(res => {
+          setContent(res.data.content);
+          // TODO : 해시태그 가져와서 content에 반영
+          if(res.data.imageUrls && res.data.imageUrls.length > 0){
+            setFiles(res.data.imageUrls.map(imgUrl => `${import.meta.env.VITE_APP_JSON_SERVER_URL}${imgUrl}`));
+            setPreviewURL(`${import.meta.env.VITE_APP_JSON_SERVER_URL}${res.data.imageUrls[0]}`);
+          }
+        });
+    }
+  }, []);
+
   const handlePrev = () => {
     if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
   };
@@ -456,7 +472,16 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
     setStep(1);
   };
 
-  const handleShare = () => {
+  const handleSave = () => {
+    if(postId){
+      updatePost();
+    }else{
+      insertPost();
+    }
+    handleClose();
+  };
+
+  const insertPost = () => {
     const formData = new FormData();
 
     // content 추가
@@ -467,55 +492,89 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
       // 파일 이름 지정 (예: file0.png, file1.png ...)
       formData.append(`postImages[${i}]`, file);
     });
-
+    formData.append("hashtags", hashtagResults.map(tag => tag.name));
+    console.log("[debug] insertPost formData:", formData.get("hashtags"));
     api.post("/api/v1/post/register", formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
-    handleClose();
-  };
+  }
+  const updatePost = () => {
+    const formData = new FormData();
+    formData.append("content", content);
+    formData.append("authorEmail", localStorage.getItem("userEmail"));
+    files.forEach((file, i) => {
+      formData.append(`postImages[${i}]`, file);
+    });
+    formData.append("hashtags", hashtagResults.map(tag => tag.name));
+    api.put(`/api/v1/post/update/${postId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
   const closeHashtagSearch = () => {
     setHashtagActive(false);
     setHashtagQuery("");
-    setHashtagResults([]);
+    setHashtagSearchResults([]);
   };
   const handleContentChange = (e) => {
     const value = e.target.value;
     setContent(value);
     const cursorPosition = e.target.selectionStart;
     const hashIndex = value.lastIndexOf('#', cursorPosition - 1);
-    // 해시태그 시작 감지
-    if (hashIndex !== -1 ) {
+
+    // 해시태그 삭제 감지 및 hashtagResults에서 제거
+    setHashtagResults(prev => {
+      // 현재 content에서 남아있는 해시태그 목록 추출
+      const matches = value.match(/#([\u3131-\u3163\uac00-\ud7a3\w]+)/g) || [];
+      const currentTags = matches.map(tag => tag.replace('#', ''));
+      // prev에 있던 태그 중 현재 content에 없는 태그만 제거
+      return prev.filter(tagObj => currentTags.includes(tagObj.name));
+    });
+
+    if (hashIndex !== -1) {
       const beforeCursor = value.substring(hashIndex, cursorPosition);
-      // hashtag 뒤에 공백이 있을 경우 해시태그로 인식하지 않음
       if (value[cursorPosition] === ' ') {
         closeHashtagSearch();
+        const hashtagMatch = beforeCursor.match(/^#([\u3131-\u3163\uac00-\ud7a3\w]+)$/);
+        if (hashtagMatch && hashtagMatch[1]) {
+          setHashtagResults(prev =>
+            prev.some(tag => tag.name === hashtagMatch[1])
+              ? prev
+              : [...prev, { name: hashtagMatch[1] }]
+          );
+        }
         return;
       }
-      if(beforeCursor.includes(' ')) {
+      if (beforeCursor.includes(' ')) {
         closeHashtagSearch();
         return;
       }
-
       const hashtagMatch = beforeCursor.match(/^#([\u3131-\u3163\uac00-\ud7a3\w]+)$/);
       setHashtagActive(true);
-      console.log(hashtagMatch[1]);
       setHashtagQuery(hashtagMatch ? hashtagMatch[1] : "");
-      
     } else {
       setHashtagActive(false);
       setHashtagQuery("");
-      setHashtagResults([]);
+      setHashtagSearchResults([]);
     }
-  }
-  // 공백 입력 시 해시태그 비활성화
+  };
+
+  // 공백, 줄바꿈 입력 시 해시태그 결과에 추가
   const handleContentKeyDown = (e) => {
-    const value = e.target.value;
     if (hashtagActive && (e.key === " " || e.key === "Enter")) {
+      if (hashtagQuery) {
+        setHashtagResults(prev =>
+          prev.some(tag => tag.name === hashtagQuery)
+            ? prev
+            : [...prev, { name: hashtagQuery }]
+        );
+      }
       setHashtagActive(false);
       setHashtagQuery("");
-      setHashtagResults([]);
+      setHashtagSearchResults([]);
     }
   };
 
@@ -524,7 +583,7 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
     if (e.target === e.currentTarget) {
       setHashtagActive(false);
       setHashtagQuery("");
-      setHashtagResults([]);
+      setHashtagSearchResults([]);
       handleClose();
     }
   };
@@ -535,19 +594,24 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
     const formData = new FormData();
 
     files.forEach((file, i) => {
-      formData.append(`postImages[${i}]`, file);
+      formData.append(`images[${i}]`, file);
     });
 
     // TODO : AI를 통한 해시태그 추출 API 호출
-    // api.post("/api/v1/post/AI/Hashtag", formData, {
-    //   headers: {
-    //     'Content-Type': 'multipart/form-data'
-    //   }
-    // }).then(response => {
-    //   console.log("해시태그 등록 결과 : ", response.data);
-    // });
+    api.post("/api/v1/post/ai/hashtag", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }).then(response => {
+      // 추출된 해시태그를 content에 추가 
+      const hashtags = response.data.map(item => item.hashtags).flat();
+      const uniqueHashtags = Array.from(new Set(hashtags));
+      const hashtagString = uniqueHashtags.join(" ");
+      setContent(prev => prev + (prev ? " " : "") + hashtagString);
+    });
   }
 
+  
 
   return (
     <Overlay ref={modalRef} onClick={handleOverlayClick}>
@@ -560,8 +624,8 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
             <Header style={{ margin: 0, flex: 1, textAlign: 'center' }}>
               새 게시물 만들기
             </Header>
-            <ShareButton onClick={handleShare}>
-              공유하기
+            <ShareButton onClick={handleSave}>
+              {postId ? "수정하기" : "공유하기"}
             </ShareButton>
           </TopBar>
         ) : (
@@ -608,11 +672,13 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
                       </SlideAreaLeft>
                     )}
                     <PreviewBox style={{ marginTop: 0 }}>
-                      <img
-                        src={previewURL}
-                        alt="preview"
-                        style={{ width: "100%", height: "auto" }}
-                      />
+                      {previewURL && 
+                        <img
+                          src={previewURL}
+                          alt="preview"
+                          style={{ width: "100%", height: "auto" }}
+                        />  
+                      }
                     </PreviewBox>
                     {currentIndex < files.length - 1 && (
                       <SlideAreaRight>
@@ -668,12 +734,12 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
                 {/* 해시태그 검색 영역 */}
                 {hashtagActive && (
                   <HashtagDropdown>
-                    {hashtagResults.length === 0 ? (
+                    {hashtagSearchResults.length === 0 ? (
                       <HashtagEmpty>
                         검색 결과가 없습니다.
                       </HashtagEmpty>
                     ) : (
-                      hashtagResults.map((tag, idx) => (
+                      hashtagSearchResults.map((tag, idx) => (
                         <HashtagResult
                           key={tag.id || idx}
                           onMouseDown={() => {
@@ -681,7 +747,7 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
                             setContent(before);
                             setHashtagActive(false);
                             setHashtagQuery("");
-                            setHashtagResults([]);
+                            setHashtagSearchResults([]);
                             setTimeout(() => textAreaRef.current?.focus(), 0);
                           }}
                         >
@@ -704,4 +770,4 @@ const FeedCreationModal = ({ isOpen, onClose, onCreateStory: onSelectPicture }) 
   );
 };
 
-export default FeedCreationModal;
+export default FeedCreateEditModal;

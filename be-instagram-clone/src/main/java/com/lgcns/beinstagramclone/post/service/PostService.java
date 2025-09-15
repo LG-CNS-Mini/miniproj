@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.lgcns.beinstagramclone.Image.domain.entity.ImageEntity;
 import com.lgcns.beinstagramclone.Image.repository.ImageRepository;
+import com.lgcns.beinstagramclone.hashtag.domain.entity.HashtagEntity;
+import com.lgcns.beinstagramclone.hashtag.repository.HashtagRepository;
 import com.lgcns.beinstagramclone.post.domain.dto.PostRequestDTO;
 import com.lgcns.beinstagramclone.post.domain.dto.PostResponseDTO;
 import com.lgcns.beinstagramclone.post.domain.entity.PostEntity;
@@ -35,6 +37,8 @@ public class PostService {
     private UserRepository userRepository;
     @Autowired
     private ImageRepository imageRepository;
+    @Autowired
+    private HashtagRepository hashtagRepository;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -55,11 +59,23 @@ public class PostService {
         PostEntity post = PostEntity.builder()
                 .author(author)
                 .content(dto.getContent())
-                .hashtag(dto.getHashtag())
                 .build();
         postRepository.save(post);
 
         List<MultipartFile> images = dto.getPostImages();
+        
+        if (dto.getHashtags() != null) {
+            dto.getHashtags().stream()
+                    .map(this::normalizeTag)
+                    .filter(s -> !s.isBlank())
+                    .distinct()
+                    .forEach(tagName -> {
+                        HashtagEntity tag = hashtagRepository.findByName(tagName)
+                                .orElseGet(() -> hashtagRepository.save(
+                                        HashtagEntity.builder().name(tagName).build()));
+                        post.addHashtag(tag);
+                    });
+        }
 
         if (images != null && !images.isEmpty()) {
             int order = 1;
@@ -130,5 +146,14 @@ public class PostService {
         } catch (Exception e) {
             throw new RuntimeException("이미지 저장 실패: " + file.getOriginalFilename(), e);
         }
+    }
+
+    private String normalizeTag(String s) {
+        if (s == null)
+            return "";
+        s = s.trim();
+        if (s.startsWith("#"))
+            s = s.substring(1);
+        return s.toLowerCase();
     }
 }

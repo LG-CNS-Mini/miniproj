@@ -1,7 +1,6 @@
 package com.lgcns.beinstagramclone.post.domain.entity;
 
 import com.lgcns.beinstagramclone.Image.domain.entity.ImageEntity;
-import com.lgcns.beinstagramclone.post.domain.entity.PostEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

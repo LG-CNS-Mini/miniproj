@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import Navigation from "../component/nav/Navigation";
-import FeedCreationModal from "../component/modal/FeedCreationModal";
 import { useState } from "react";
 import { useRef } from 'react';
-import FeedMain from "../component/feed/FeedMain";
+import FeedMainPage from "../component/feed/FeedMainPage";
+import FeedCreateEditModal from "../component/modal/FeedCreateEditModal";
 
 const FeedPage = () => {
     const moveURL = useNavigate();
     const [feedPage, setFeedPage] = useState('feed');
+    const [profileUser, setProfileUser] = useState(null);
     const [isFeedCreateOpen, setIsFeedCreateOpen] = useState(false);
     const feedCreateModalOpen = () => setIsFeedCreateOpen(true);
     const handleFeedCreateClose = () => {
@@ -18,13 +19,13 @@ const FeedPage = () => {
             <Navigation 
                 setFeedPage={setFeedPage}
                 feedCreateModalOpen={feedCreateModalOpen} 
+                setProfileUser={setProfileUser}
             />
-            <FeedCreationModal
+            <FeedCreateEditModal
                 isOpen={isFeedCreateOpen}
                 onClose={handleFeedCreateClose}
-                onCreateStory={(event) => { handleButtonClick(event) }}
             />
-            <FeedMain feedPage={feedPage} />
+            <FeedMainPage feedPage={feedPage} profileUser={profileUser} />
         </>
     )
 };

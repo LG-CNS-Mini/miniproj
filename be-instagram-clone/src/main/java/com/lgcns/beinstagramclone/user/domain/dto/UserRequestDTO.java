@@ -29,6 +29,9 @@ public class UserRequestDTO {
     @NotNull(message = "이름을 입력해주세요.")
     private String name     ;
 
+    @NotNull(message = "아이디(닉네임)를 입력해주세요.")
+    private String nickname;  
+
     private String userImageUrl;
 
     // factory method pattern
@@ -38,6 +41,7 @@ public class UserRequestDTO {
                     .email(email)
                     .passwd(passwd)
                     .name(name)
+                    .nickname(nickname)
                     .userImageUrl(userImageUrl)
                     .build();
     }

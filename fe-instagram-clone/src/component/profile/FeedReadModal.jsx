@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import api from "../../api/axios";
+import FeedCreateEditModal from "../modal/FeedCreateEditModal";
 
 const baseURL = "http://localhost:8088"; // 이미지 서버 주소
 
@@ -20,10 +21,13 @@ function getTimeAgo(dateString) {
   return "방금 전";
 }
 
-const FeedReadModal = ({ postId, isOpen, onClose }) => {
+const FeedReadModal = ({ postId, isOpen, onClose, onDelete }) => {
   const [post, setPost] = useState(null);
   const modalRef = useRef(null);
   const [commentInput, setCommentInput] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isOpenEditModal, setIsOpenEditModal] = useState(false);
+
   useEffect(() => {
     if (!isOpen || !postId) return;
     api.get(`/api/v1/post/read/${postId}`)
@@ -37,15 +41,35 @@ const FeedReadModal = ({ postId, isOpen, onClose }) => {
   useEffect(() => {
     if (!isOpen) return;
     const handleEsc = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (menuOpen) {
+          setMenuOpen(false);
+          return;
+        }
+        if(isOpenEditModal) {
+          setIsOpenEditModal(false);
+          return;
+        }
+        onClose();
+      }
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isOpenEditModal, menuOpen]);
 
   // 바깥 클릭으로 닫기
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
+    if (e.target === e.currentTarget) {
+      if (menuOpen) {
+        setMenuOpen(false);
+        return;
+      }
+      if(isOpenEditModal) {
+        setIsOpenEditModal(false);
+        return;
+      }
+      onClose();
+    }
   };
 
   const handlerSaveComment = async () => {
@@ -67,11 +91,66 @@ const FeedReadModal = ({ postId, isOpen, onClose }) => {
         // 에러 처리 필요시 추가
     }
   };
-  if (!isOpen || !post) return null;
 
+  const handleMenuClick = () => {
+    setMenuOpen(true);
+  };
+
+  const handleMenuClose = () => {
+    setMenuOpen(false);
+  };
+
+  const handleDelete = () => {
+    // TODO: 삭제 API 호출
+    api.delete(`/api/v1/post/delete/${postId}`)
+        .then(() => {
+            setMenuOpen(false);
+            onClose();
+            onDelete();
+        });
+    
+    // 삭제 후 모달 닫기 등 추가 처리
+  };
+
+  const handleEdit = () => {
+    setMenuOpen(false);
+    setIsOpenEditModal(true);
+  };
+
+  const handleEditClose = () => {
+    setIsOpenEditModal(false);
+  };
+
+  // 메뉴 모달 바깥 클릭 시 닫기
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleMenuOutsideClick = (e) => {
+      // 메뉴 모달이 열려있고, 메뉴 영역이 아닌 곳 클릭 시 닫기
+      if (
+        document.getElementById("menu-modal") &&
+        !document.getElementById("menu-modal").contains(e.target) &&
+        !document.getElementById("menu-button").contains(e.target)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleMenuOutsideClick);
+    return () => document.removeEventListener("mousedown", handleMenuOutsideClick);
+  }, [menuOpen]);
+
+  if (!isOpen || !post) return null;
 
   return (
     <Overlay onClick={handleOverlayClick}>
+      {isOpenEditModal && (
+        <FeedCreateEditModal
+          isOpen={isOpenEditModal}
+          onEditClose={handleEditClose}
+          postId={postId}
+          isEdit={true}
+          onClose={() => setIsOpenEditModal(false)}
+        />
+      )}
       <Modal ref={modalRef}>
         <ImageSection>
           <MainImage
@@ -83,14 +162,24 @@ const FeedReadModal = ({ postId, isOpen, onClose }) => {
         </ImageSection>
         <ContentSection>
           <Header>
-            <ProfileThumb src="/default-profile.png" />
-            <Author>{post.authorEmail}</Author>
-            <FollowBtn>팔로우</FollowBtn>
+            {
+            localStorage.getItem("userImageUrl") || "" ? (
+              <ProfileThumb src={`${baseURL}${localStorage.getItem("userImageUrl")}`} />
+            ) : (
+              <ProfileThumb src={`${baseURL}/images/default-profile.png`} />
+            )}
+            <MenuButton id="menu-button" onClick={handleMenuClick}>⋯</MenuButton>
+            {menuOpen && (
+              <MenuModal id="menu-modal">
+                <MenuItem onClick={handleEdit}>수정</MenuItem>
+                <MenuItemDelete onClick={handleDelete}>삭제</MenuItemDelete>
+                <MenuItem onClick={handleMenuClose}>취소</MenuItem>
+              </MenuModal>
+            )}
           </Header>
           <PostContent>
             {post.content}
           </PostContent>
-          
           <Comments>
             {post.comments && post.comments.length > 0 ? (
               post.comments.map(c => (
@@ -104,14 +193,13 @@ const FeedReadModal = ({ postId, isOpen, onClose }) => {
           </Comments>
           <Footer>
             <LikeCount>좋아요 {post.likeCount || 0}개</LikeCount>
-            {/* <Date>{post.createdAt}</Date> */}
+            <DateBox>{getTimeAgo(post.createDate)}</DateBox>
             <CommentInputBox>
               <CommentInput onChange={e => setCommentInput(e.target.value)} placeholder="댓글 달기" />
               <PostBtn onClick={handlerSaveComment}>게시</PostBtn>
             </CommentInputBox>
           </Footer>
         </ContentSection>
-        <CloseBtn onClick={onClose}>×</CloseBtn>
       </Modal>
     </Overlay>
   );
@@ -257,18 +345,48 @@ const PostBtn = styled.button`
   cursor: pointer;
 `;
 
-const CloseBtn = styled.button`
-  position: absolute;
-  top: 16px;
-  right: 16px;
+const MenuButton = styled.button`
   background: none;
   border: none;
-  font-size: 32px;
+  font-size: 28px;
   color: #888;
   cursor: pointer;
-  z-index: 10;
-  transition: color 0.2s;
+  margin-left: auto;
+  position: relative;
+  z-index: 20;
+`;
+
+const MenuModal = styled.div`
+  position: absolute;
+  top: 48px;
+  right: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  padding: 12px 0;
+  min-width: 120px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+`;
+
+const MenuItem = styled.button`
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  text-align: left;
+  font-size: 16px;
+  color: #222;
+  cursor: pointer;
   &:hover {
-    color: #222;
+    background: #f3f3f3;
+  }
+`;
+
+const MenuItemDelete = styled(MenuItem)`
+  color: #e53935;
+  font-weight: 600;
+  &:hover {
+    background: #ffeaea;
   }
 `;

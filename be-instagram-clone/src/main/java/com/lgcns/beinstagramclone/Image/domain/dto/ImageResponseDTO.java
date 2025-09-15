@@ -1,5 +1,7 @@
 package com.lgcns.beinstagramclone.Image.domain.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,4 +18,5 @@ import lombok.ToString;
 public class ImageResponseDTO {
     private Integer imageId;
     private String imageUrl;
+    private List<String> hashtags;
 }

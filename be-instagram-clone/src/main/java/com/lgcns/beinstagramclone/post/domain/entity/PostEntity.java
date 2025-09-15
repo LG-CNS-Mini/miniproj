@@ -4,8 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.web.multipart.MultipartFile;
-
+import com.lgcns.beinstagramclone.hashtag.domain.entity.HashtagEntity;
 import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
 
 import jakarta.persistence.CascadeType;
@@ -18,7 +17,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,7 +31,7 @@ import lombok.ToString;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"author","images"})
+@ToString(exclude = { "author", "images" })
 public class PostEntity {
 
     @Id
@@ -43,8 +41,8 @@ public class PostEntity {
     @Column(nullable = false, length = 2000)
     private String content;
 
-    @Column(length = 255)
-    private String hashtag;
+    // @Column(length = 255)
+    // private String hashtag;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createDate;
@@ -57,6 +55,10 @@ public class PostEntity {
     @Builder.Default
     private List<PostImageEntity> images = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PostHashtagEntity> tags = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         if (this.createDate == null) {
@@ -67,5 +69,13 @@ public class PostEntity {
     public void addImage(PostImageEntity postImageEntity) {
         postImageEntity.setPost(this);
         this.images.add(postImageEntity);
+    }
+
+    public void addHashtag(HashtagEntity tag) {
+        PostHashtagEntity postHashtagEntity = PostHashtagEntity.builder()
+                .post(this)
+                .hashtag(tag)
+                .build();
+        this.tags.add(postHashtagEntity);
     }
 }

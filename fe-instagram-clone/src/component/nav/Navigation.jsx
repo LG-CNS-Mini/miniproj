@@ -1,6 +1,8 @@
 import React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import api from '../../api/axios';
 
 // Styled Components
 const NavigationContainer = styled.nav`
@@ -128,79 +130,204 @@ const CreateIcon = () => (
   </svg>
 );
 
+const SearchPanel = styled.div`
+  position: fixed;
+  left: 100px;
+  top: 0;
+  width: 350px;
+  height: 100vh;
+  background: #fff;
+  border-right: 1px solid #dbdbdb;
+  padding: 32px 24px;
+  z-index: 100;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+`;
+
+const SearchTitle = styled.h3`
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 24px;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  margin-bottom: 20px;
+`;
+
+const UserResult = styled.div`
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f3f3;
+`;
+
+const UserThumb = styled.img`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+`;
+
+const UserInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const UserName = styled.span`
+  font-weight: 600;
+  font-size: 18px;
+`;
+
+const UserEmail = styled.span`
+  font-size: 15px;
+  color: #888;
+`;
+
+
 // Main Navigation Component
-const Navigation = ({ activeItem = 'home', profileImage, feedCreateModalOpen, setFeedPage}) => {
+const Navigation = ({
+  activeItem = 'home',
+  profileImage,
+  feedCreateModalOpen,
+  setFeedPage,
+  setProfileUser
+}) => {
+  const [searchMode, setSearchMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResult, setSearchResult] = useState(null);
+
   const navItems = [
     { key: 'home', label: '홈', icon: <HomeIcon /> },
     { key: 'search', label: '검색', icon: <SearchIcon /> },
-    // { key: 'explore', label: '탐색 탭', icon: <ExploreIcon /> },
-    // { key: 'reels', label: '릴스', icon: <ReelsIcon /> },
-    // { key: 'messages', label: '메시지', icon: <MessagesIcon /> },
-    // { key: 'notifications', label: '알림', icon: <LikeIcon /> },
     { key: 'create', label: '만들기', icon: <CreateIcon /> },
   ];
-  // TODO : profileImage 불러오기
-  const userId = localStorage.getItem('userEmail');
-  
+  const userImageUrl = localStorage.getItem("userImageUrl")
+    ? `${import.meta.env.VITE_APP_JSON_SERVER_URL}${localStorage.getItem("userImageUrl")}`
+    : `${import.meta.env.VITE_APP_JSON_SERVER_URL}/images/default-profile.png`;
+
   const moveURL = useNavigate();
+
   const onClickNavigate = (key) => {
-        switch (key) {
-            case 'home':
-                setFeedPage('feed');
-                break;
-            case 'search':
-                break;
-            case 'create':
-                feedCreateModalOpen();
-                break;
-            case 'profile':
-                setFeedPage('profile');
-                break;
-            default:
-                break;
-        }
+    switch (key) {
+      case 'home':
+        setFeedPage('feed');
+        setSearchMode(false);
+        break;
+      case 'search':
+        setSearchMode((prev) => !prev);
+        break;
+      case 'create':
+        feedCreateModalOpen();
+        setSearchMode(false);
+        break;
+      case 'profile':
+        setProfileUser(null);
+        setFeedPage('profile');
+        setSearchMode(false);
+        break;
+      default:
+        break;
+    }
+  };
 
-        console.log("Navigating to:", key);
-    };
+  const handleSearch = (e) => {
+    const keyword = e.target.value;
+    setSearchQuery(keyword);
+    if (keyword.trim().length > 0) {
+      api.get("/api/v2/inspire/user/suggest", { params: { query: keyword }, headers:{
+        Authorization: `${localStorage.getItem("accessToken")}`
+      } })
+      .then((res) => {
+        setSearchResult(res.data);
+      }).catch((err) => {
+        setSearchResult([]);
+      });
+    }else{
+      setSearchResult([]);
+    }
+  };
 
+  const handleUserSelect = (user) => {
+    setProfileUser(user);
+    setFeedPage('explore');
+    setSearchMode(false);
+    setSearchQuery('');
+    setSearchResult(null);
+  }
   return (
-    <NavigationContainer>
-  <Logo><InstagramLogoSVG /></Logo>
-      <NavList>
-        {navItems.map((item) => (
-          <NavItem key={item.key}>
+    <>
+      <NavigationContainer style={searchMode ? { width: 80, padding: '20px 0' } : {}}>
+        <Logo><InstagramLogoSVG /></Logo>
+        <NavList>
+          {navItems.map((item) => (
+            <NavItem key={item.key}>
+              <NavLink
+                className={activeItem === item.key ? 'active' : ''}
+                onClick={() => onClickNavigate(item.key)}
+                style={searchMode ? { justifyContent: 'center', padding: '12px 0' } : {}}
+              >
+                <IconContainer>{item.icon}</IconContainer>
+                {!searchMode && item.label}
+              </NavLink>
+            </NavItem>
+          ))}
+          <NavItem>
             <NavLink
-              className={activeItem === item.key ? 'active' : ''}
-              onClick={() => onClickNavigate(item.key)}
+              className={activeItem === 'profile' ? 'active' : ''}
+              onClick={() => onClickNavigate('profile')}
+              style={searchMode ? { justifyContent: 'center', padding: '12px 0' } : {}}
             >
-              <IconContainer>{item.icon}</IconContainer>
-              {item.label}
+              <IconContainer>
+                {userImageUrl ? (
+                  <ProfileImage src={userImageUrl} alt="프로필" />
+                ) : (
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    backgroundColor: '#dbdbdb',
+                    border: '2px solid #262626'
+                  }} />
+                )}
+              </IconContainer>
+              {!searchMode && "프로필"}
             </NavLink>
           </NavItem>
-        ))}
-        <NavItem>
-          <NavLink
-            className={activeItem === 'profile' ? 'active' : ''}
-            onClick={() => onClickNavigate('profile')}
-          >
-            <IconContainer>
-              {profileImage ? (
-                <ProfileImage src={profileImage} alt="프로필" />
-              ) : (
-                <div style={{ 
-                  width: '24px', 
-                  height: '24px', 
-                  borderRadius: '50%', 
-                  backgroundColor: '#dbdbdb',
-                  border: '2px solid #262626'
-                }} />
-              )}
-            </IconContainer>
-            프로필
-          </NavLink>
-        </NavItem>
-      </NavList>
-    </NavigationContainer>
+        </NavList>
+      </NavigationContainer>
+      {searchMode && (
+        <SearchPanel>
+          <SearchTitle>검색</SearchTitle>
+          <SearchInput
+            type="text"
+            placeholder="이름, 이메일로 검색"
+            value={searchQuery}
+            onChange={handleSearch}
+          />
+          {searchResult && Array.isArray(searchResult) && searchResult.length > 0 ? (
+            searchResult.map(user => (
+              <UserResult onClick={() => handleUserSelect(user)} key={user.id}>
+                <UserThumb src={user.userImageUrl ? `${import.meta.env.VITE_APP_JSON_SERVER_URL}${user.userImageUrl}` : `${import.meta.env.VITE_APP_JSON_SERVER_URL}/images/default-profile.png`} />
+                <UserInfo>
+                  <UserName>{user.userName}</UserName>
+                  <UserEmail>{user.email}</UserEmail>
+                </UserInfo>
+              </UserResult>
+            ))
+          ) : (
+            searchQuery && <div>검색 결과가 없습니다.</div>
+          )}
+        </SearchPanel>
+      )}
+    </>
   );
 };
 
