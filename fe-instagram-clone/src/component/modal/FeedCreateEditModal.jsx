@@ -368,12 +368,14 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
   const [previewURL, setPreviewURL] = useState("");
   const [hashtagActive, setHashtagActive] = useState(false);
   const [hashtagQuery, setHashtagQuery] = useState("");
+  const [hashtagSearchResults, setHashtagSearchResults] = useState([]);
   const [hashtagResults, setHashtagResults] = useState([]);
 
   const handleClose = () => {
       setFiles([]);
       setStep(1);
       setContent("");
+      setHashtagResults([]);
       onClose();
   }
 
@@ -399,7 +401,7 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
       ) {
         setHashtagActive(false);
         setHashtagQuery("");
-        setHashtagResults([]);
+        setHashtagSearchResults([]);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -412,13 +414,13 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
       // TODO : 해시태그 검색 API 호출
       console.log("[debug] FeedCreationModal hashtagQuery : ", hashtagQuery);
       // api.get("/api/v1/hashtag", { params: { hashtag: hashtagQuery } })
-      //   .then(res => setHashtagResults(res.data))
-      //   .catch(() => setHashtagResults([]));
+      //   .then(res => setHashtagSearchResults(res.data))
+      //   .catch(() => setHashtagSearchResults([]));
       // 해시태그 결과물 임시 데이터
 
-      setHashtagResults(prev => [...prev, { id: 1, name: "example", count: 1234 }]);
+      setHashtagSearchResults(prev => [...prev, { id: 1, name: "example", count: 1234 }]);
     } else {
-      setHashtagResults([]);
+      setHashtagSearchResults([]);
     }
   }, [hashtagQuery, hashtagActive]);
 
@@ -475,8 +477,8 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
       updatePost();
     }else{
       insertPost();
-      handleClose();
     }
+    handleClose();
   };
 
   const insertPost = () => {
@@ -490,6 +492,8 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
       // 파일 이름 지정 (예: file0.png, file1.png ...)
       formData.append(`postImages[${i}]`, file);
     });
+    formData.append("hashtags", hashtagResults.map(tag => tag.name));
+    console.log("[debug] insertPost formData:", formData.get("hashtags"));
     api.post("/api/v1/post/register", formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -503,6 +507,7 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
     files.forEach((file, i) => {
       formData.append(`postImages[${i}]`, file);
     });
+    formData.append("hashtags", hashtagResults.map(tag => tag.name));
     api.put(`/api/v1/post/update/${postId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -512,43 +517,64 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
   const closeHashtagSearch = () => {
     setHashtagActive(false);
     setHashtagQuery("");
-    setHashtagResults([]);
+    setHashtagSearchResults([]);
   };
   const handleContentChange = (e) => {
     const value = e.target.value;
     setContent(value);
     const cursorPosition = e.target.selectionStart;
     const hashIndex = value.lastIndexOf('#', cursorPosition - 1);
-    // 해시태그 시작 감지
-    if (hashIndex !== -1 ) {
+
+    // 해시태그 삭제 감지 및 hashtagResults에서 제거
+    setHashtagResults(prev => {
+      // 현재 content에서 남아있는 해시태그 목록 추출
+      const matches = value.match(/#([\u3131-\u3163\uac00-\ud7a3\w]+)/g) || [];
+      const currentTags = matches.map(tag => tag.replace('#', ''));
+      // prev에 있던 태그 중 현재 content에 없는 태그만 제거
+      return prev.filter(tagObj => currentTags.includes(tagObj.name));
+    });
+
+    if (hashIndex !== -1) {
       const beforeCursor = value.substring(hashIndex, cursorPosition);
-      // hashtag 뒤에 공백이 있을 경우 해시태그로 인식하지 않음
       if (value[cursorPosition] === ' ') {
         closeHashtagSearch();
+        const hashtagMatch = beforeCursor.match(/^#([\u3131-\u3163\uac00-\ud7a3\w]+)$/);
+        if (hashtagMatch && hashtagMatch[1]) {
+          setHashtagResults(prev =>
+            prev.some(tag => tag.name === hashtagMatch[1])
+              ? prev
+              : [...prev, { name: hashtagMatch[1] }]
+          );
+        }
         return;
       }
-      if(beforeCursor.includes(' ')) {
+      if (beforeCursor.includes(' ')) {
         closeHashtagSearch();
         return;
       }
-
       const hashtagMatch = beforeCursor.match(/^#([\u3131-\u3163\uac00-\ud7a3\w]+)$/);
       setHashtagActive(true);
       setHashtagQuery(hashtagMatch ? hashtagMatch[1] : "");
-      
     } else {
       setHashtagActive(false);
       setHashtagQuery("");
-      setHashtagResults([]);
+      setHashtagSearchResults([]);
     }
-  }
-  // 공백 입력 시 해시태그 비활성화
+  };
+
+  // 공백, 줄바꿈 입력 시 해시태그 결과에 추가
   const handleContentKeyDown = (e) => {
-    const value = e.target.value;
     if (hashtagActive && (e.key === " " || e.key === "Enter")) {
+      if (hashtagQuery) {
+        setHashtagResults(prev =>
+          prev.some(tag => tag.name === hashtagQuery)
+            ? prev
+            : [...prev, { name: hashtagQuery }]
+        );
+      }
       setHashtagActive(false);
       setHashtagQuery("");
-      setHashtagResults([]);
+      setHashtagSearchResults([]);
     }
   };
 
@@ -557,7 +583,7 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
     if (e.target === e.currentTarget) {
       setHashtagActive(false);
       setHashtagQuery("");
-      setHashtagResults([]);
+      setHashtagSearchResults([]);
       handleClose();
     }
   };
@@ -708,12 +734,12 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
                 {/* 해시태그 검색 영역 */}
                 {hashtagActive && (
                   <HashtagDropdown>
-                    {hashtagResults.length === 0 ? (
+                    {hashtagSearchResults.length === 0 ? (
                       <HashtagEmpty>
                         검색 결과가 없습니다.
                       </HashtagEmpty>
                     ) : (
-                      hashtagResults.map((tag, idx) => (
+                      hashtagSearchResults.map((tag, idx) => (
                         <HashtagResult
                           key={tag.id || idx}
                           onMouseDown={() => {
@@ -721,7 +747,7 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
                             setContent(before);
                             setHashtagActive(false);
                             setHashtagQuery("");
-                            setHashtagResults([]);
+                            setHashtagSearchResults([]);
                             setTimeout(() => textAreaRef.current?.focus(), 0);
                           }}
                         >
