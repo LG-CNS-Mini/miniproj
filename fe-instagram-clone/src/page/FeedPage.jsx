@@ -8,6 +8,7 @@ import FeedCreateEditModal from "../component/modal/FeedCreateEditModal";
 const FeedPage = () => {
     const moveURL = useNavigate();
     const [feedPage, setFeedPage] = useState('feed');
+    const [profileUser, setProfileUser] = useState(null);
     const [isFeedCreateOpen, setIsFeedCreateOpen] = useState(false);
     const feedCreateModalOpen = () => setIsFeedCreateOpen(true);
     const handleFeedCreateClose = () => {
@@ -18,12 +19,13 @@ const FeedPage = () => {
             <Navigation 
                 setFeedPage={setFeedPage}
                 feedCreateModalOpen={feedCreateModalOpen} 
+                setProfileUser={setProfileUser}
             />
             <FeedCreateEditModal
                 isOpen={isFeedCreateOpen}
                 onClose={handleFeedCreateClose}
             />
-            <FeedMain feedPage={feedPage} />
+            <FeedMain feedPage={feedPage} profileUser={profileUser} />
         </>
     )
 };
