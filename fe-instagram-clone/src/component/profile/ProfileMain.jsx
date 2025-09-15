@@ -101,13 +101,7 @@ const ProfileMain = () => {
     //   });
 
     // 게시글 목록 페이징 처리
-    api.get(`/api/v1/post/posts`, {
-      params: { page: 1, size: 10 }
-    })
-      .then(res => {
-        console.log(res.data);
-        setPosts(res.data || []);
-      });
+    selectPosts();
   }, [userId, userImageUrl]);
 
   const handlePostClick = (postId) => {
@@ -117,12 +111,28 @@ const ProfileMain = () => {
     setIsFeedReadOpen(true);
   }
 
+  const handlerPostDelete = () => {
+    // 게시글 삭제 후 목록 갱신
+    selectPosts();
+  }
+
+  const selectPosts = () => {
+    api.get(`/api/v1/post/posts`, {
+      params: { page: 1, size: 10 }
+    })
+      .then(res => {
+        console.log(res.data);
+        setPosts(res.data || []);
+      });
+  }
+
   return (
     <Container>
         <FeedReadModal
             postId={selectedPostId}
             isOpen={isFeedReadOpen}
             onClose={() => setIsFeedReadOpen(false)}
+            onDelete={handlerPostDelete}
         />
       <ProfileHeader>
         <ProfileImage
