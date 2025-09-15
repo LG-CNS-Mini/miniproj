@@ -1,13 +1,19 @@
 package com.lgcns.beinstagramclone.user.service;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.lgcns.beinstagramclone.user.domain.dto.UserRequestDTO;
 import com.lgcns.beinstagramclone.user.domain.dto.UserResponseDTO;
+import com.lgcns.beinstagramclone.user.domain.dto.UserSuggestDTO;
 import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
 import com.lgcns.beinstagramclone.user.repository.RefreshTokenRepository;
 import com.lgcns.beinstagramclone.user.repository.UserRepository;
@@ -20,7 +26,7 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private RefreshTokenRepository refreshTokenRepository ;
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     private JwtProvider provider;
@@ -48,14 +54,34 @@ public class UserService {
         map.put("access", accToken);
         map.put("refresh", refToken);
 
-
         return map;
     }
 
     public void logout(String email) {
-        System.out.println(">>> service logout redis delete"); 
+        System.out.println(">>> service logout redis delete");
         // Redis에서 Refresh Token 제거
-        refreshTokenRepository.delete(email); 
-    
+        refreshTokenRepository.delete(email);
+
+    }
+
+    public List<UserSuggestDTO> suggestUsers(String keyword, int limit) {
+        Pageable pageable = PageRequest.of(
+                0,
+                limit,
+                Sort.by("name").ascending().and(Sort.by("nickname").ascending()));
+
+        String kw = (keyword == null ? "" : keyword).trim();
+
+        return userRepository
+                .searchByNameOrNickname(kw, pageable)
+                .stream()
+                .map(u -> UserSuggestDTO.builder()
+                        .email(u.getEmail())
+                        .name(u.getName())
+                        .nickname(u.getNickname())
+                        .userImageUrl(u.getUserImageUrl())
+                        .build())
+                .toList();
+
     }
 }

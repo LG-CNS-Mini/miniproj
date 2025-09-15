@@ -17,7 +17,7 @@ import lombok.ToString;
 @ToString
 public class UserResponseDTO {
 
-    private String email, passwd, name, userImageUrl;
+    private String email, passwd, name, userImageUrl,nickname;
 
     // token
     // private String accessToken;
@@ -30,6 +30,7 @@ public class UserResponseDTO {
                     .email(user.getEmail())
                     .passwd(user.getPasswd())
                     .name(user.getName())
+                    .nickname(user.getNickname())
                     .userImageUrl(user.getUserImageUrl())
                     .build();
     }
