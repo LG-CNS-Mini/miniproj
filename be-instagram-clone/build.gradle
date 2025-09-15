@@ -29,8 +29,8 @@ dependencies {
     // // 타임리프 템플릿 엔진 (로그인/로그아웃 페이지 등을 만들 때 유용해)
     // implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-    // // OAuth2 클라이언트 기능
-    // implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    // // OAuth2 클라이언트 기능 (FACEBOOK)
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
     // 스프링 시큐리티 핵심 라이브러리
     implementation 'org.springframework.boot:spring-boot-starter-security'

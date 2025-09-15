@@ -20,7 +20,7 @@ const StyledButton = styled.button`
     }
 `;
 
-const Button = ({ title }) => {
+const FacebookButton = ({ title }) => {
     const moveUrl = useNavigate();
 
     const handleLogout = async () => {
@@ -29,7 +29,7 @@ const Button = ({ title }) => {
         console.log("[debug] >>> LOGOUT token: " + token);
         await api
             .post("/auth/api/v2/inspire/user/logout", null, {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: { Authorization: `${token}` },
             })
             .then((response) => {
                 localStorage.removeItem("accessToken");
@@ -44,9 +44,9 @@ const Button = ({ title }) => {
 
     return (
         <StyledButton onClick={handleLogout}>
-            {title || "로그아웃"}
+            {title || "페이스북 로그인"}
         </StyledButton>
     );
 };
 
-export default Button;
+export default FacebookButton;

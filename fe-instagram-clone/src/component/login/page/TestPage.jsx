@@ -10,7 +10,7 @@ const Container = styled.div`
     background-color: #f0f2f5;
 `;
 
-const MainPage = () => {
+const TestPage = () => {
     return (
         <Container>
             <LogoutButton></LogoutButton>
@@ -18,4 +18,4 @@ const MainPage = () => {
     );
 };
 
-export default MainPage;
+export default TestPage;

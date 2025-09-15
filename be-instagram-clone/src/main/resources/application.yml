@@ -29,6 +29,13 @@ spring:
             hibernate:
                 format_sql: true
                 dialect: org.hibernate.dialect.MariaDBDialect
+    security:
+        oauth2:
+            client:
+                registration:
+                    facebook:
+                        client-id: ${FACEBOOK_APP_ID} #너의-페이스북-앱-ID-여기-입력
+                        client-secret: ${FACEBOOK_SECRET_CODE} #너의-페이스북-앱-시크릿-여기-입력
 
 jwt:
     secret: ${JWT_SECRET_KEY}
