@@ -2,6 +2,7 @@ package com.lgcns.beinstagramclone.user.service;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,7 @@ public class OAuth2DetailsService extends DefaultOAuth2UserService{
                         .passwd(password)
                         .email(email)
                         .name(name)
-                        .nickname(name)
+                        .nickname(name+randomNumberString())
                         .build();
                 userRepository.save(user);
                 return new CustomOAuth2User(user, oauth2User.getAttributes());
@@ -61,4 +62,19 @@ public class OAuth2DetailsService extends DefaultOAuth2UserService{
         return null;
 	
 	}
+
+    public String randomNumberString() {
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(10); // 10자리를 담을 공간을 미리 만들어 줘.
+        
+        // 첫 번째 숫자는 0이 오면 안 되니까 1부터 9 사이에서 선택해.
+        sb.append(random.nextInt(9) + 1);
+        
+        // 나머지 9자리는 0부터 9 사이에서 랜덤하게 선택해.
+        for (int i = 0; i < 9; i++) {
+            sb.append(random.nextInt(10));
+        }
+        
+        return sb.toString();
+    }
 }
