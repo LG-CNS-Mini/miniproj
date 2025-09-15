@@ -3,6 +3,7 @@ import styled from "styled-components";
 import api from "../../../api/axios";
 import { Link, useNavigate } from "react-router-dom";
 import SignUpPage from "./SignUpPage";
+import FacebookButton from "../ui/FacebookButton";
 
 // Container
 const Container = styled.div`
@@ -111,7 +112,7 @@ const SignInPage = () => {
                 );
                 // token
                 localStorage.setItem(
-                "accessToken",
+                    "accessToken",
                     response.headers.get("authorization")
                 );
                 localStorage.setItem(
@@ -121,7 +122,10 @@ const SignInPage = () => {
                 // user
                 localStorage.setItem("userInfo", response.data.name);
                 localStorage.setItem("userEmail", response.data.email);
-                localStorage.setItem("userImageUrl", response.data.userImageUrl);
+                localStorage.setItem(
+                    "userImageUrl",
+                    response.data.userImageUrl
+                );
 
                 moveUrl("/main");
             })
@@ -166,6 +170,8 @@ const SignInPage = () => {
                 <TextLink>
                     <Link to="/">회원가입</Link>
                 </TextLink>
+
+                <FacebookButton></FacebookButton>
             </FormWrapper>
         </Container>
     );

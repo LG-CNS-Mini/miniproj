@@ -48,6 +48,7 @@ public class UserService {
         map.put("access", accToken);
         map.put("refresh", refToken);
 
+        refreshTokenRepository.save(accToken, refToken, provider.getREFRESH_TOKEN_EXPIRY());
 
         return map;
     }

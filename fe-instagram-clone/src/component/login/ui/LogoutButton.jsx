@@ -29,7 +29,7 @@ const Button = ({ title }) => {
         console.log("[debug] >>> LOGOUT token: " + token);
         await api
             .post("/auth/api/v2/inspire/user/logout", null, {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: { Authorization: `${token}` },
             })
             .then((response) => {
                 localStorage.removeItem("accessToken");

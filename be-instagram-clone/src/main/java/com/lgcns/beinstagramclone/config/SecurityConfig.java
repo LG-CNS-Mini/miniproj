@@ -2,6 +2,7 @@ package com.lgcns.beinstagramclone.config;
 
 import com.lgcns.beinstagramclone.filter.JwtFilter;
 import com.lgcns.beinstagramclone.user.auth.OAuth2LoginSuccessHandler;
+import com.lgcns.beinstagramclone.user.service.OAuth2DetailsService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class SecurityConfig {
         
     @Autowired
     private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -49,7 +50,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                         // ⭐ 로그아웃 성공 시 리다이렉트하지 않고, HTTP 상태 코드로 응답하도록 설정해요.
                         .logoutSuccessHandler((request, response, authentication) -> {
                                 response.setStatus(HttpServletResponse.SC_OK);
@@ -63,12 +64,13 @@ public class SecurityConfig {
 
                 // ⭐ OAuth2 로그인 설정을 추가했어요! ⭐
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(oAuth2LoginSuccessHandler)
+                        .successHandler(oAuth2LoginSuccessHandler)                        
                         // 로그인 성공 시 리다이렉션 될 URL을 설정해요.
-                        .defaultSuccessUrl("/main", true)
+                        //.defaultSuccessUrl("/oauth2/redirect", true)
                         // 로그인 실패 시 리다이렉션 될 URL을 설정해요.
                         .failureUrl("/main")
                 )
+                
 
                 // 이제 모든 경로에 대한 접근 권한은 여기서만 관리해요!
                 .authorizeHttpRequests(request ->
@@ -77,6 +79,7 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/v3/api-docs/**"),
                                 new AntPathRequestMatcher("/api/v2/inspire/user/signup"),
                                 new AntPathRequestMatcher("/api/v2/inspire/user/signin"),
+                                new AntPathRequestMatcher("/auth/api/v2/inspire/user/logout"),
                                 new AntPathRequestMatcher("/api/v2/inspire/forcast/getData"),
                                 new AntPathRequestMatcher("/api/v2/inspire/ai/chat"),
                                 new AntPathRequestMatcher("/api/v2/inspire/ai/java"),
