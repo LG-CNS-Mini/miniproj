@@ -608,6 +608,7 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
       const uniqueHashtags = Array.from(new Set(hashtags));
       const hashtagString = uniqueHashtags.join(" ");
       setContent(prev => prev + (prev ? " " : "") + hashtagString);
+      setHashtagResults(prev => [...prev, ...uniqueHashtags.map(tag => ({ name: tag }))]);
     });
   }
 
