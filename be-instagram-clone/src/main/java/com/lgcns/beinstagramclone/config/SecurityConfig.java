@@ -59,17 +59,17 @@ public class SecurityConfig {
 
                 // 서버가 상태를 유지하지 않는 Stateless 방식으로 설정해요.
                 // JWT 토큰 기반 인증이므로 세션은 사용하지 않아요.
-                .sessionManagement(c ->
-                        c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//                .sessionManagement(c ->
+//                        c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // ⭐ OAuth2 로그인 설정을 추가했어요! ⭐
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(oAuth2LoginSuccessHandler)                        
-                        // 로그인 성공 시 리다이렉션 될 URL을 설정해요.
-                        //.defaultSuccessUrl("/oauth2/redirect", true)
-                        // 로그인 실패 시 리다이렉션 될 URL을 설정해요.
-                        .failureUrl("/main")
-                )
+//                .oauth2Login(oauth2 -> oauth2
+//                        .successHandler(oAuth2LoginSuccessHandler)
+//                        // 로그인 성공 시 리다이렉션 될 URL을 설정해요.
+//                        //.defaultSuccessUrl("/oauth2/redirect", true)
+//                        // 로그인 실패 시 리다이렉션 될 URL을 설정해요.
+//                        .failureUrl("/main")
+//                )
                 
 
                 // 이제 모든 경로에 대한 접근 권한은 여기서만 관리해요!
@@ -85,9 +85,9 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/api/v2/inspire/ai/java"),
                                 new AntPathRequestMatcher("/api/v2/inspire/sse/subscribe"),
                                 new AntPathRequestMatcher("/api/v2/inspire/sse/notifications"),
-                                new AntPathRequestMatcher("/api/v1/post"),
-                                new AntPathRequestMatcher("/api/v1/post/posts/**"),
-                                new AntPathRequestMatcher("/images/**")
+                                new AntPathRequestMatcher("/api/v1/post/**"),
+                                new AntPathRequestMatcher("/images/**"),
+                                new AntPathRequestMatcher("/api/v2/inspire/user/suggest")
                         ).permitAll() // 이 경로들은 모두 허용!
                         // Preflight 요청 (OPTIONS)도 모두 허용하도록 추가해요.
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

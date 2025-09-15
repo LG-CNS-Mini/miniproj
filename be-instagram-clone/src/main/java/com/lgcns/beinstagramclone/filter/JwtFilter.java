@@ -108,6 +108,7 @@ public class JwtFilter implements Filter {
                 ||  path.startsWith("/api/v1/post/posts")
                 ||  path.startsWith("/images/")
                 ||  path.startsWith("/api/v1/follow")
+                ||  path.startsWith("/api/v2/inspire/user/suggest")
                 ;
                 
     }
