@@ -1,4 +1,5 @@
-import LogoutButton from "../ui/LogoutButton";
+import LikeButton from "../like/likeButton";
+import LogoutButton from "../login/ui/LogoutButton";
 import styled from "styled-components";
 
 // Container
@@ -13,6 +14,7 @@ const Container = styled.div`
 const TestPage = () => {
     return (
         <Container>
+            <LikeButton></LikeButton>
             <LogoutButton></LogoutButton>
         </Container>
     );

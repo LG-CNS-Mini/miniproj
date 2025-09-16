@@ -4,8 +4,8 @@ import SignUpPage from "./component/login/page/SignUpPage";
 import SignInPage from "./component/login/page/SignInPage";
 import styled from "styled-components";
 import FeedPage from "./page/FeedPage";
-import TestPage from "./component/login/page/TestPage";
 import AuthRedirectHandler from "./component/login/auth/AuthRedirectHandler";
+import TestPage from "./component/test/TestPage";
 
 const DivTitleText = styled.p`
     font-size: 24px;
