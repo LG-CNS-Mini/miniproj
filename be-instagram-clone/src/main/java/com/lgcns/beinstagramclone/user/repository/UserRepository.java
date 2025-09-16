@@ -44,8 +44,8 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
     LEFT JOIN FollowEntity follower ON u.email = follower.following.email
     LEFT JOIN FollowEntity following ON u.email = following.follower.email
     LEFT JOIN FollowEntity isfollow 
-      ON u.email = isfollow.following.email
-     AND isfollow.follower.email = :authorEmail
+      ON u.email = isfollow.follower.email
+     AND isfollow.following.email = :authorEmail
     WHERE u.email = :email
     GROUP BY u.email, u.name, u.userImageUrl, u.nickname
 """)
