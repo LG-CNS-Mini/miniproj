@@ -33,7 +33,7 @@ public class CommentCtrl {
     @Autowired
     private CommentService commentService;
 
-    @PostMapping
+    @PostMapping("/register")
     @Operation(summary = "댓글 입력")
     public ResponseEntity<CommentResponseDTO> insert(
             @Valid @RequestBody CommentRequestDTO req) {
@@ -49,7 +49,7 @@ public class CommentCtrl {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/post/{postId}")
+    @GetMapping("/{postId}")
     @Operation(summary = "게시글 단위 댓글 조회")
     public ResponseEntity<List<CommentResponseDTO>> getTree(
             @PathVariable("postId") Integer postId
