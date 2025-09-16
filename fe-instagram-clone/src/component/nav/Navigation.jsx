@@ -214,9 +214,7 @@ const Navigation = ({
   const myUserId = localStorage.getItem("userEmail") || "";
   useEffect(() => {
     // 나의 유저 아이디가 아닐경우에는 myUserImageUrl을 업데이트 하지 않음
-    if (profileUser != myUserId){
-      return;
-    }else{
+    if(!profileUser || profileUser === myUserId){
       setMyUserImageUrl(userImageUrl);
     }
   }, [userImageUrl]);
