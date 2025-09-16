@@ -6,15 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.lgcns.beinstagramclone.post.domain.dto.PostRequestDTO;
 import com.lgcns.beinstagramclone.post.domain.dto.PostResponseDTO;
@@ -27,10 +20,11 @@ public class PostCtrl {
     @Autowired
     private PostService postService;
 
-    @GetMapping("/posts")
-    public ResponseEntity<List<PostResponseDTO>> posts() {
-        List<PostResponseDTO> list = postService.select();
-        return new ResponseEntity<List<PostResponseDTO>>(list, HttpStatus.OK);
+    @GetMapping("/posts/my")
+    public ResponseEntity<List<PostResponseDTO>> myPosts(
+            @RequestParam("authorEmail") String email) {
+        List<PostResponseDTO> list = postService.select(email);
+        return ResponseEntity.ok(list);
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -55,23 +49,22 @@ public class PostCtrl {
         }
     }
 
-    @PutMapping("update/{postID}")
-    public ResponseEntity<Void> update(@PathVariable("postID") Integer postID, @RequestBody PostRequestDTO request) {
-        int result = postService.update(postID, request);
-        if (result != 0) {
-            return ResponseEntity.status(HttpStatus.OK).body(null);
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+    @PutMapping(value = "/update/{postID}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PostResponseDTO> update(
+            @PathVariable("postID") Integer postID,
+            @RequestPart(value = "content", required = false) String content,
+            @RequestPart(value = "hashtags", required = false) List<String> hashtags,
+            @RequestPart(value = "authorEmail", required = true) String authorEmail,
+            @RequestPart(value = "postImages", required = false) List<MultipartFile> postImages) {
+
+        PostRequestDTO dto = new PostRequestDTO(content, hashtags, authorEmail, postImages);
+        PostResponseDTO updated = postService.update(postID, dto);
+        return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("delete/{postID}")
+    @DeleteMapping("/delete/{postID}")
     public ResponseEntity<Void> delete(@PathVariable("postID") Integer postID) {
-        int result = postService.delete(postID);
-        if (result != 0) {
-            return ResponseEntity.status(HttpStatus.OK).body(null);
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+        postService.delete(postID);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -82,4 +82,17 @@ public class PostEntity {
         this.tags.add(postHashtagEntity);
     }
 
+    public void clearImages() {
+        for (PostImageEntity image : new ArrayList<>(images)) {
+            image.setPost(null);
+        }
+        images.clear();
+    }
+
+    public void clearHashtags() {
+        for (PostHashtagEntity tag : new ArrayList<>(tags)) {
+            tag.setPost(null); 
+        }
+        tags.clear();
+    }
 }

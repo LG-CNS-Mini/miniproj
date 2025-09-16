@@ -43,10 +43,12 @@ public class PostService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    @Transactional(readOnly = true)
-    public List<PostResponseDTO> select() {
-        return postRepository.findAllWithImages()
-                .stream()
+    public List<PostResponseDTO> select(String email) {
+        UserEntity author = userRepository.findById(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저"));
+
+        List<PostEntity> entities = postRepository.findByAuthor(author);
+        return entities.stream()
                 .map(PostResponseDTO::fromEntity)
                 .toList();
     }
@@ -63,7 +65,7 @@ public class PostService {
         postRepository.save(post);
 
         List<MultipartFile> images = dto.getPostImages();
-        
+
         if (dto.getHashtags() != null) {
             dto.getHashtags().stream()
                     .map(this::normalizeTag)
@@ -105,19 +107,76 @@ public class PostService {
         return PostResponseDTO.fromEntity(post);
     }
 
-
     @Transactional
-    public int update(Integer id, PostRequestDTO post) {
-        PostEntity postEntity = postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
-        postEntity.setContent(post.getContent());
-        return 1;
+    public PostResponseDTO update(Integer postID, PostRequestDTO dto) {
+        PostEntity post = postRepository.findByIdWithImages(postID)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다. id=" + postID));
+
+        if (dto.getContent() != null) {
+            post.setContent(dto.getContent());
+        }
+
+        if (dto.getHashtags() != null) {
+            post.clearHashtags();
+
+            dto.getHashtags().stream()
+                    .map(this::normalizeTag)
+                    .filter(s -> !s.isBlank())
+                    .distinct()
+                    .forEach(tagName -> {
+                        HashtagEntity tag = hashtagRepository.findByName(tagName)
+                                .orElseGet(() -> hashtagRepository.save(HashtagEntity.builder().name(tagName).build()));
+                        post.addHashtag(tag);
+                    });
+        }
+
+        if (dto.getPostImages() != null) {
+            List<PostImageEntity> oldMappings = new ArrayList<>(
+                    post.getImages() == null ? List.of() : post.getImages());
+
+            post.clearImages();
+
+            for (PostImageEntity m : oldMappings) {
+                if (m.getImage() != null) {
+                    String url = m.getImage().getImageUrl();
+                    try {
+                        Path p = resolvePathFromPublicUrl(url);
+                        if (p != null)
+                            Files.deleteIfExists(p);
+                    } catch (IOException ignore) {
+                    }
+                    imageRepository.delete(m.getImage());
+                }
+            }
+
+            int order = 1;
+            for (MultipartFile file : dto.getPostImages()) {
+                if (file == null || file.isEmpty())
+                    continue;
+
+                String imageUrl = saveFileAndReturnPublicUrl(file);
+                ImageEntity image = imageRepository.save(
+                        ImageEntity.builder().imageUrl(imageUrl).build());
+
+                PostImageEntity mapping = PostImageEntity.builder()
+                        .post(post)
+                        .image(image)
+                        .sortOrder(order++)
+                        .build();
+
+                post.addImage(mapping);
+            }
+        }
+
+        return PostResponseDTO.fromEntity(post);
     }
 
     @Transactional
-    public int delete(Integer id) {
-        postRepository.deleteById(id);
-        return 1;
+    public void delete(Integer id) {
+        PostEntity post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다. id=" + id));
+
+        postRepository.delete(post);
     }
 
     private String saveFileAndReturnPublicUrl(MultipartFile file) {
@@ -146,6 +205,21 @@ public class PostService {
         } catch (Exception e) {
             throw new RuntimeException("이미지 저장 실패: " + file.getOriginalFilename(), e);
         }
+    }
+
+    private Path resolvePathFromPublicUrl(String publicUrl) {
+        if (publicUrl == null || publicUrl.isBlank())
+            return null;
+
+        String prefix = "/images/";
+        if (!publicUrl.startsWith(prefix))
+            return null;
+
+        // "2025/09/16/uuid.png"
+        String relative = publicUrl.substring(prefix.length());
+
+        // uploadDir = "C:/upload"
+        return Paths.get(uploadDir).resolve(relative).toAbsolutePath();
     }
 
     private String normalizeTag(String s) {

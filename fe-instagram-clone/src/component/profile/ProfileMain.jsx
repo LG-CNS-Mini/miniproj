@@ -136,8 +136,10 @@ const ProfileMain = ({ profileUser, setUserImageUrl, userImageUrl }) => {
   }
 
   const selectPosts = () => {
-    api.get(`/api/v1/post/posts`, {
-      params: { page: 1, size: 10 }
+    api.get(`/api/v1/post/posts/my`, {
+      params: { 
+        authorEmail : userId
+       }
     })
       .then(res => {
         setPosts(res.data || []);
