@@ -261,7 +261,6 @@ const Navigation = ({
   };
 
   const handleUserSelect = (user) => {
-    console.log(user.email)
     setProfileUser(user.email);
     setFeedPage('explore');
     setSearchMode(false);
@@ -323,7 +322,7 @@ const Navigation = ({
           />
           {searchResult && Array.isArray(searchResult) && searchResult.length > 0 ? (
             searchResult.map(user => (
-              <UserResult onClick={() => handleUserSelect(user)} key={user.id}>
+              <UserResult onClick={() => handleUserSelect(user)} key={user.email}>
                 <UserThumb src={user.userImageUrl ? `${import.meta.env.VITE_APP_JSON_SERVER_URL}${user.userImageUrl}` : `${import.meta.env.VITE_APP_JSON_SERVER_URL}/images/default-profile.png`} />
                 <UserInfo>
                   <UserName>{user.userName}</UserName>

@@ -114,14 +114,16 @@ const ProfileMain = ({ profileUser, setUserImageUrl, userImageUrl }) => {
   }, [profileUser]);
 
   useEffect(() => {
-    api.get(`/api/v2/inspire/user/${userId}`)
+    api.get(`/api/v2/inspire/user/${userId}/${myUserId}`)
       .then(res => {
+        console.log(res.data);
         setUserImageUrl(res.data.userImageUrl); // 상위에도 반영
         setUserName(res.data.userName);
         setNickname(res.data.nickname); // 닉네임 셋팅
         setPostCount(res.data.postCount);
         setFollowerCount(res.data.followerCount);
         setFollowingCount(res.data.followingCount);
+        setIsFollowing(res.data.isFollow == 1 ? true : false); // 팔로우 상태 셋팅
       });
     selectPosts();
   }, [userId]);
@@ -146,12 +148,23 @@ const ProfileMain = ({ profileUser, setUserImageUrl, userImageUrl }) => {
       });
   }
 
-  // 팔로우 버튼 클릭 핸들러 (API 연동 필요)
   const handleFollow = () => {
-    api.post(`/api/v1/follow`, { targetUserId: userId })
-      .then(() => {
-        // 팔로우 성공 시 UI 갱신 등 처리
-        alert("팔로우 완료!");
+    const followingId = localStorage.getItem("userEmail");
+    const followerId = userId;
+    
+    api.post(`/api/v1/follow/${followerId}/follow/${followingId}`,{
+      headers : {
+        Authorization : localStorage.getItem("accessToken")
+      }
+    })
+      .then((response) => {
+        setIsFollowing(true);
+        setFollowerCount(prevCount => prevCount + 1); // 팔로워 수 증가
+      },
+      {
+        headers: {
+          "Authorization": localStorage.getItem("accessToken")
+        }
       });
   };
 
@@ -172,10 +185,9 @@ const ProfileMain = ({ profileUser, setUserImageUrl, userImageUrl }) => {
     formData.append("image", file);
 
     try {
-      const res = await api.post(`/api/v2/inspire/user/${userId}/profileimage`, formData, {
+      const res = await api.post(`/api/v2/inspire/user/profileimage/${userId}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      console.log(res.data.userImageUrl);
       // 업로드 성공 시 프로필 이미지 갱신
       setUserImageUrl(res.data.userImageUrl);
     } catch (err) {
@@ -211,7 +223,7 @@ const ProfileMain = ({ profileUser, setUserImageUrl, userImageUrl }) => {
         <ProfileInfo>
           <UserName>
             {userName}
-            {userId !== myUserId && (
+            {(userId !== myUserId && !isFollowing)&& (
               <FollowButton onClick={handleFollow}>팔로우</FollowButton>
             )}
           </UserName>

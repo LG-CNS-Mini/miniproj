@@ -1,6 +1,7 @@
 package com.lgcns.beinstagramclone.user.ctrl;
 
 import com.lgcns.beinstagramclone.user.domain.dto.*;
+import jakarta.websocket.server.PathParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -94,13 +95,14 @@ public class UserCtrl {
         return ResponseEntity.ok(userService.suggestUsers(keyword, limit));
     }
 
-    @GetMapping("/{userEmail}")
+    @GetMapping("/{userEmail}/{authorEmail}")
     public ResponseEntity<UserProfileResponseDTO> getUser(
-            @PathVariable("userEmail") String userEmail) {
-        return ResponseEntity.ok().body(userService.selectUser(userEmail));
+            @PathVariable("userEmail") String userEmail,
+            @PathVariable("authorEmail") String authorEmail) {
+        return ResponseEntity.ok().body(userService.selectUser(userEmail, authorEmail));
     }
 
-    @PostMapping("/{userId}/profileimage")
+    @PostMapping("/profileimage/{userId}")
     public ResponseEntity<ProfileImageResponseDTO> updateProfileImage(
             @PathVariable("userId") String userId,
             @RequestParam("image") MultipartFile image) {

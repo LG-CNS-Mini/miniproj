@@ -31,7 +31,7 @@ public interface HashtagSearchRepository extends JpaRepository<PostEntity, Integ
         select new com.lgcns.beinstagramclone.post.domain.dto.PostListItemDTO(
             p.author.name,
             p.content,
-            p.createDate
+            p.createDate AS createdAt
         )
         from PostEntity p
         where exists (

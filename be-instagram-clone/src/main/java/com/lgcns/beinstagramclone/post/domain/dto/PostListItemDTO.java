@@ -35,4 +35,11 @@ public class PostListItemDTO {
         this.likeCount = 0L;
         this.likedByMe = false;
     }
+
+    public PostListItemDTO(String authorName, String content, LocalDateTime createDate) {
+        this.authorName = authorName;
+        this.content = content;
+        this.createdAt = createDate;
+    }
+
 }

@@ -36,14 +36,18 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
         u.nickname,
         COUNT(DISTINCT follower.follower.email) AS followerCount,
         COUNT(DISTINCT following.following.email) AS followingCount,
-        COUNT(DISTINCT p.postID) AS postCount
+        COUNT(DISTINCT p.postID) AS postCount,
+        COUNT(DISTINCT isfollow.id) AS isFollow
     )
     FROM UserEntity u
     LEFT JOIN PostEntity p ON u.email = p.author.email
     LEFT JOIN FollowEntity follower ON u.email = follower.following.email
     LEFT JOIN FollowEntity following ON u.email = following.follower.email
+    LEFT JOIN FollowEntity isfollow 
+      ON u.email = isfollow.following.email
+     AND isfollow.follower.email = :authorEmail
     WHERE u.email = :email
     GROUP BY u.email, u.name, u.userImageUrl, u.nickname
 """)
-UserProfileResponseDTO selectUser(@Param("email") String email);
+UserProfileResponseDTO selectUser(@Param("email") String email, @Param("authorEmail") String authorEmail);
 }

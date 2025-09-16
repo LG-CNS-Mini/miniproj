@@ -17,4 +17,5 @@ public class UserProfileResponseDTO {
     private Long followerCount;
     private Long followingCount;
     private Long postCount;
+    private Long isFollow;
 }

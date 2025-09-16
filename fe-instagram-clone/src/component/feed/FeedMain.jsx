@@ -10,6 +10,9 @@ const baseURL = import.meta.env.VITE_APP_JSON_SERVER_URL;
 const FeedMain = ({ feedPage, profileUser }) => {
     const [feeds, setFeeds] = useState([]);
     const [comments, setComments] = useState([]);
+    const [isLiked, setIsLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(0);
+
     useEffect(() => {
         api.get("api/v1/post/following", {
             params: {
@@ -18,9 +21,10 @@ const FeedMain = ({ feedPage, profileUser }) => {
                 email: localStorage.getItem("userEmail"),
             },
         }).then((res) => {
-            console.log(res.data);
             setFeeds(res.data.items || []);
             setComments(res.data.items?.comments || []);
+            setIsLiked(res.data.items?.isLiked || false);
+            setLikeCount(res.data.items?.likeCount || 0);
         });
     }, []);
 
@@ -48,6 +52,8 @@ const FeedMain = ({ feedPage, profileUser }) => {
                         </FeedMeta>
                         <LikeAndCommentSection
                             postId={feed.postId}
+                            isLiked={isLiked}
+                            likeCount={likeCount}
                             comments={comments}
                             setComments={setComments}
                         />
@@ -77,10 +83,8 @@ function getTimeAgo(dateString) {
 }
 
 // 좋아요 & 댓글 컴포넌트
-const LikeAndCommentSection = ({ postId, comments, setComments }) => {
-    const [liked, setLiked] = useState(false);
+const LikeAndCommentSection = ({ postId, isLiked, likeCount, comments, setComments }) => {
     const [commentInput, setCommentInput] = useState("");
-    const [likeCount, setLikeCount] = useState(0);
     const [replyInput, setReplyInput] = useState({});
     const [showReplyBox, setShowReplyBox] = useState({});
 
@@ -148,10 +152,12 @@ const LikeAndCommentSection = ({ postId, comments, setComments }) => {
 
     return (
         <div>
-            {/* <LikeButton
+            <LikeButton
                 postId={postId}
                 email={localStorage.getItem("userEmail")}
-            /> */}
+                initialLikeCount={likeCount}
+                initialIsLiked={isLiked}
+            />
             {/* <LikeButton onClick={() => setLiked(l => !l)}>
         {liked ? <FaHeart color="#e53e3e" /> : <FaRegHeart />}
         <span style={{ marginLeft: 6 }}>{likeCount}개</span>

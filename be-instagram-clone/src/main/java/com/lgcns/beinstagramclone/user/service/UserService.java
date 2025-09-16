@@ -99,8 +99,8 @@ public class UserService {
 
     }
 
-    public UserProfileResponseDTO selectUser(String userEmail) {
-        return userRepository.selectUser(userEmail);
+    public UserProfileResponseDTO selectUser(String userEmail, String authorEmail) {
+        return userRepository.selectUser(userEmail, authorEmail);
     }
 
     @Transactional
