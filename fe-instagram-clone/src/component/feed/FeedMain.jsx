@@ -21,6 +21,7 @@ const FeedMain = ({ feedPage, profileUser }) => {
                 email: localStorage.getItem("userEmail"),
             },
         }).then((res) => {
+            console.log(res.data.items);
             setFeeds(res.data.items || []);
             setComments(res.data.items?.comments || []);
             setIsLiked(res.data.items?.isLiked || false);
@@ -36,7 +37,7 @@ const FeedMain = ({ feedPage, profileUser }) => {
                         <ProfileThumb
                             src={`${baseURL}/images/default-profile.png`}
                         />
-                        <AuthorEmail>{feed.authorEmail}</AuthorEmail>
+                        <AuthorEmail>{feed.authorName}</AuthorEmail>
                     </FeedHeader>
                     <FeedImageSlider images={feed.imageUrls} />
                     <FeedContent>
