@@ -9,10 +9,10 @@ import com.lgcns.beinstagramclone.like.domain.entity.LikeId;
 @Repository
 public interface LikeRepository extends JpaRepository<LikeEntity, LikeId> {
     // email과 postId를 사용하여 좋아요 기록이 있는지 확인 (boolean 반환)
-    boolean existsByEmailAndPostId(String email, int postId);
+    public boolean existsByEmailAndPostId(String email, int postId);
     
     // 특정 게시물(postId)의 좋아요 총 개수 조회
-    int countByPostId(int postId);
+    public int countByPostId(int postId);
 }
 
 
