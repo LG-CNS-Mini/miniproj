@@ -2,16 +2,25 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import api from "../../api/axios";
 import { FaRegHeart, FaHeart } from "react-icons/fa"; // 아이콘 추가
+import FeedImageSlider from "./FeedImageSlider";
 
-const baseURL = import.meta.env.VITE_APP_JSON_SERVER_URL; // 이미지 서버 주소
+const baseURL = import.meta.env.VITE_APP_JSON_SERVER_URL;
 
 const FeedMain = ({ feedPage, profileUser }) => {
   const [feeds, setFeeds] = useState([]);
-
+  const [comments, setComments] = useState([]);
   useEffect(() => {
-    api.get("api/v1/post/posts", { params: { page: 1, size: 5 } })
+    api.get("api/v1/post/following", { 
+      params: {
+         page: 0, 
+         size: 5,
+         email: localStorage.getItem("userEmail")
+      } 
+    })
       .then(res => {
-        setFeeds(res.data || []);
+        console.log(res.data);
+        setFeeds(res.data.items || []);
+        setComments(res.data.items?.comments || []);
       });
   }, []);
 
@@ -34,7 +43,7 @@ const FeedMain = ({ feedPage, profileUser }) => {
                 ))}
               </FeedHashtags>
             </FeedMeta>
-            <LikeAndCommentSection postId={feed.postId} />
+            <LikeAndCommentSection postId={feed.postId} comments={comments} setComments={setComments} />
           </FeedContent>
         </FeedCard>
       ))}
@@ -43,34 +52,6 @@ const FeedMain = ({ feedPage, profileUser }) => {
 };
 
 export default FeedMain;
-
-// 이미지 슬라이더 컴포넌트
-const FeedImageSlider = ({ images }) => {
-  const [current, setCurrent] = useState(0);
-
-  if (!images || images.length === 0) return null;
-
-  const handlePrev = () => {
-    if (current > 0) setCurrent(current - 1);
-  };
-  const handleNext = () => {
-    if (current < images.length - 1) setCurrent(current + 1);
-  };
-
-  return (
-    <ImageSlider>
-      {current > 0 && (
-        <SlideButtonLeft onClick={handlePrev}>&lt;</SlideButtonLeft>
-      )}
-      <ImageBox>
-        <FeedImage src={`${baseURL}${images[current]}`} alt="feed" />
-      </ImageBox>
-      {current < images.length - 1 && (
-        <SlideButtonRight onClick={handleNext}>&gt;</SlideButtonRight>
-      )}
-    </ImageSlider>
-  );
-};
 
 // 시간 표시 함수
 function getTimeAgo(dateString) {
@@ -89,35 +70,59 @@ function getTimeAgo(dateString) {
 }
 
 // 좋아요 & 댓글 컴포넌트
-const LikeAndCommentSection = ({ postId }) => {
+const LikeAndCommentSection = ({ postId , comments, setComments}) => {
   const [liked, setLiked] = useState(false);
-  const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
   const [likeCount, setLikeCount] = useState(0);
-  // 대댓글 입력 상태 관리
   const [replyInput, setReplyInput] = useState({});
   const [showReplyBox, setShowReplyBox] = useState({});
 
   // 댓글 추가
   const handleAddComment = () => {
     if (!commentInput.trim()) return;
-    setComments([
-      ...comments,
-      { id: Date.now(), text: commentInput, replies: [] }
-    ]);
-    setCommentInput("");
+    api.post("/api/v1/comments/register", {
+      postId: postId, 
+      parentId: 0,
+      content: commentInput,
+      authorEmail: localStorage.getItem("userEmail")
+    }).then(response => {
+      setComments([...comments, response.data]);
+      setCommentInput("");
+    }).catch(error => {
+      console.error("댓글 추가 실패:", error);
+    });
   };
 
   // 대댓글 추가
   const handleAddReply = (commentId) => {
     if (!replyInput[commentId]?.trim()) return;
-    setComments(comments.map(c =>
-      c.id === commentId
-        ? { ...c, replies: [...c.replies, { id: Date.now(), text: replyInput[commentId] }] }
-        : c
-    ));
-    setReplyInput({ ...replyInput, [commentId]: "" });
-    setShowReplyBox({ ...showReplyBox, [commentId]: false });
+    // 실제 API 연동 필요
+    api.post("/api/v1/comments/register", {
+      postId: postId,
+      parentId: commentId,
+      content: replyInput[commentId],
+      authorEmail: localStorage.getItem("userEmail")
+    }).then(response => {
+      // response.data를 실제 대댓글 데이터로 교체 필요
+      const comment = response.data;
+      console.log(comment);
+      setComments(comments.map(c =>
+        c.commentId === commentId
+          ? { ...c, children: [...(c.children || []), {
+              commentId: c.commentId,
+              content: replyInput[commentId],
+              authorNickname: comment.authorNickname,
+              authorProfileImageUrl: comment.authorProfileImageUrl,
+              createdAt: comment.createdAt,
+              depth: 1
+            }] }
+          : c
+      ));
+      setReplyInput({ ...replyInput, [commentId]: "" });
+      setShowReplyBox({ ...showReplyBox, [commentId]: false });
+    }).catch(error => {
+      console.error("대댓글 추가 실패:", error);
+    });
   };
 
   return (
@@ -137,36 +142,58 @@ const LikeAndCommentSection = ({ postId }) => {
         </CommentInputBox>
         <CommentList>
           {comments.map(comment => (
-            <CommentItem key={comment.id}>
-              <CommentText>{comment.text}</CommentText>
-              <ReplyBtn onClick={() =>
-                setShowReplyBox({ ...showReplyBox, [comment.id]: !showReplyBox[comment.id] })
-              }>
-                답글
-              </ReplyBtn>
-              {showReplyBox[comment.id] && (
-                <ReplyInputBox>
-                  <ReplyInput
-                    value={replyInput[comment.id] || ""}
-                    onChange={e =>
-                      setReplyInput({ ...replyInput, [comment.id]: e.target.value })
-                    }
-                    placeholder="답글을 입력하세요"
-                  />
-                  <ReplyAddBtn onClick={() => handleAddReply(comment.id)}>등록</ReplyAddBtn>
-                </ReplyInputBox>
-              )}
-              {/* 대댓글 리스트 */}
-              {comment.replies && comment.replies.length > 0 && (
-                <ReplyList>
-                  {comment.replies.map(reply => (
-                    <ReplyItem key={reply.id}>
-                      <ReplyText>{reply.text}</ReplyText>
-                    </ReplyItem>
-                  ))}
-                </ReplyList>
-              )}
-            </CommentItem>
+            <React.Fragment key={comment.commentId}>
+              <CommentItem>
+                <CommentProfileImg
+                  src={comment.authorProfileImageUrl ? `${baseURL}${comment.authorProfileImageUrl}` : `${baseURL}/images/default-profile.png`}
+                  alt="profile"
+                />
+                <CommentBody>
+                  <CommentTop>
+                    <CommentNickname>{comment.authorNickname || comment.authorEmail}</CommentNickname>
+                  </CommentTop>
+                  <CommentContent>{comment.content}</CommentContent>
+                  <CommentMeta>
+                    <span>{getTimeAgo(comment.createdAt)}</span>
+                    <ReplyBtn onClick={() =>
+                      setShowReplyBox({ ...showReplyBox, [comment.commentId]: !showReplyBox[comment.commentId] })
+                    }>
+                      답글 달기
+                    </ReplyBtn>
+                  </CommentMeta>
+                  {showReplyBox[comment.commentId] && (
+                    <ReplyInputBox>
+                      <ReplyInput
+                        value={replyInput[comment.commentId] || ""}
+                        onChange={e =>
+                          setReplyInput({ ...replyInput, [comment.commentId]: e.target.value })
+                        }
+                        placeholder="답글을 입력하세요"
+                      />
+                      <ReplyAddBtn onClick={() => handleAddReply(comment.commentId)}>등록</ReplyAddBtn>
+                    </ReplyInputBox>
+                  )}
+                  {/* 대댓글 리스트 */}
+                  {comment.children && comment.children.length > 0 && (
+                    <ReplyList>
+                      {comment.children.map(reply => (
+                        <ReplyItem key={reply.commentId}>
+                          <CommentProfileImg
+                            src={reply.authorProfileImageUrl ? `${baseURL}${reply.authorProfileImageUrl}` : `${baseURL}/images/default-profile.png`}
+                            alt="profile"
+                          />
+                          <ReplyText>
+                            <CommentNickname>{reply.authorNickname || reply.authorEmail}</CommentNickname>
+                            <span style={{ marginLeft: 6 }}>{reply.content}</span>
+                            <span style={{ marginLeft: 10, color: "#888", fontSize: 12 }}>{getTimeAgo(reply.createdAt)}</span>
+                          </ReplyText>
+                        </ReplyItem>
+                      ))}
+                    </ReplyList>
+                  )}
+                </CommentBody>
+              </CommentItem>
+            </React.Fragment>
           ))}
         </CommentList>
       </CommentSection>
@@ -211,50 +238,8 @@ const AuthorEmail = styled.span`
   font-size: 16px;
 `;
 
-const ImageSlider = styled.div`
-  position: relative;
-  width: 100%;
-  height: 400px;
-  background: #fafafa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
 
-const ImageBox = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
 
-const FeedImage = styled.img`
-  max-width: 100%;
-  max-height: 400px;
-  object-fit: contain;
-  border-radius: 0;
-`;
-
-const SlideButtonLeft = styled.button`
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255,255,255,0.7);
-  border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 22px;
-  cursor: pointer;
-  z-index: 2;
-`;
-
-const SlideButtonRight = styled(SlideButtonLeft)`
-  left: auto;
-  right: 12px;
-`;
 
 const FeedContent = styled.div`
   padding: 16px 18px 0 18px;
@@ -334,11 +319,47 @@ const CommentList = styled.ul`
 `;
 
 const CommentItem = styled.li`
-  margin-bottom: 10px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 `;
 
-const CommentText = styled.span`
+const CommentProfileImg = styled.img`
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #eee;
+`;
+
+const CommentBody = styled.div`
+  flex: 1;
+`;
+
+const CommentTop = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const CommentNickname = styled.span`
+  font-weight: 600;
   font-size: 15px;
+  color: #222;
+`;
+
+const CommentContent = styled.div`
+  font-size: 15px;
+  margin: 2px 0 4px 0;
+`;
+
+const CommentMeta = styled.div`
+  font-size: 13px;
+  color: #888;
+  display: flex;
+  gap: 12px;
+  align-items: center;
 `;
 
 const ReplyBtn = styled.button`
@@ -348,6 +369,7 @@ const ReplyBtn = styled.button`
   font-size: 14px;
   margin-left: 10px;
   cursor: pointer;
+  padding: 0;
 `;
 
 const ReplyInputBox = styled.div`
