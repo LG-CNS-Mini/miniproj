@@ -24,7 +24,7 @@ public class PostController {
 
     @GetMapping("/following")
     public SliceResponseDTO<PostListItemDTO> feedFromFollowing(
-            @RequestParam String email,                 // 내 이메일 (로그인 세션으로 대체 가능)
+            @RequestParam String email,                 // 내 이메일
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "true") boolean includeMe // 내 글 포함 여부
