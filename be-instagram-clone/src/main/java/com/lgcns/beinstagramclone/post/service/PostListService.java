@@ -1,7 +1,7 @@
 package com.lgcns.beinstagramclone.post.service;
 
-import com.lgcns.beinstagramclone.comment.domain.dto.CommentResponseDTO;
-import com.lgcns.beinstagramclone.comment.repository.CommentRepository;
+
+import com.lgcns.beinstagramclone.comment.service.CommentService;
 import com.lgcns.beinstagramclone.like.repository.LikeRepository;
 import com.lgcns.beinstagramclone.post.domain.dto.PostListItemDTO;
 import com.lgcns.beinstagramclone.post.domain.dto.SliceResponseDTO;
@@ -27,7 +27,7 @@ public class PostListService {
     private final PostListRepository postListRepository;
     private final PostImageRepository postImageRepository;
     private final LikeRepository likeRepository;
-    private final CommentRepository commentRepository;
+    private final CommentService commentService;
 
     public SliceResponseDTO<PostListItemDTO> getFollowedFeed(String myEmail, int page, int size, boolean includeMe) {
         var pageable = PageRequest.of(page, size);
@@ -67,10 +67,7 @@ public class PostListService {
         
         var items = summaries.stream()
                 .map(s -> {
-                    var comments = commentRepository.findAllByPostIdWithAuthor(s.getPostId())
-                            .stream()
-                            .map(CommentResponseDTO::fromEntity)
-                            .toList();
+                    var comments = commentService.getTreeByPost(s.getPostId());
 
                     return PostListItemDTO.builder()
                             .postId(s.getPostId())
