@@ -2,6 +2,7 @@ package com.lgcns.beinstagramclone.user.repository;
 
 import java.util.Optional;
 
+import com.lgcns.beinstagramclone.user.domain.dto.UserProfileResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +27,23 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
     Page<UserEntity> searchByNameOrNickname(@Param("kw") String keyword, Pageable pageable);
 
     Optional<UserEntity> findByEmail(String email);
+
+    @Query("""
+    SELECT new com.lgcns.beinstagramclone.user.domain.dto.UserProfileResponseDTO(
+        u.email,
+        u.name,
+        u.userImageUrl,
+        u.nickname,
+        COUNT(DISTINCT follower.follower.email) AS followerCount,
+        COUNT(DISTINCT following.following.email) AS followingCount,
+        COUNT(DISTINCT p.postID) AS postCount
+    )
+    FROM UserEntity u
+    LEFT JOIN PostEntity p ON u.email = p.author.email
+    LEFT JOIN FollowEntity follower ON u.email = follower.following.email
+    LEFT JOIN FollowEntity following ON u.email = following.follower.email
+    WHERE u.email = :email
+    GROUP BY u.email, u.name, u.userImageUrl, u.nickname
+""")
+UserProfileResponseDTO selectUser(@Param("email") String email);
 }
