@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -13,17 +14,20 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PostListItemDTO {
-    private Integer postId;      // 게시글ID
-    private String authorName;       // 회원이름
-    private String content;          // 내용
-    // private String hashtag;          // 해시태그
-    private LocalDateTime createdAt; // 작성시간 (PostEntity의 createDate 매핑)
-    private List<String> imageUrls;       // 이미지들 
+    private Integer postId;       // 게시글ID
+    private String authorName;    // 회원이름
+    private String content;       // 내용
+    private LocalDateTime createdAt; // 작성시간
 
-    public PostListItemDTO(String authorName, String content, LocalDateTime createdAt) {
+    @Builder.Default
+    private List<String> imageUrls = new ArrayList<>(); // 이미지들
+
+    // JPQL 프로젝션과 정확히 매칭되는 4-인자 생성자
+    public PostListItemDTO(Integer postId, String authorName, String content, LocalDateTime createdAt) {
         this.postId = postId;
         this.authorName = authorName;
         this.content = content;
         this.createdAt = createdAt;
+        this.imageUrls = new ArrayList<>();
     }
 }
