@@ -23,9 +23,6 @@ const FeedMain = ({ feedPage, profileUser }) => {
         }).then((res) => {
             console.log(res.data.items);
             setFeeds(res.data.items || []);
-            setComments(res.data.items?.comments || []);
-            setIsLiked(res.data.items?.isLiked || false);
-            setLikeCount(res.data.items?.likeCount || 0);
         });
     }, []);
 
@@ -35,9 +32,11 @@ const FeedMain = ({ feedPage, profileUser }) => {
                 <FeedCard key={feed.postId}>
                     <FeedHeader>
                         <ProfileThumb
-                            src={`${baseURL}/images/default-profile.png`}
+                            src={feed.authorProfileImageUrl
+                                ? `${baseURL}${feed.authorProfileImageUrl}`
+                                : `${baseURL}/images/default-profile.png`}
                         />
-                        <AuthorEmail>{feed.authorName}</AuthorEmail>
+                        <AuthorEmail>{feed.authorEmail}</AuthorEmail>
                     </FeedHeader>
                     <FeedImageSlider images={feed.imageUrls} />
                     <FeedContent>
@@ -52,11 +51,10 @@ const FeedMain = ({ feedPage, profileUser }) => {
                             </FeedHashtags>
                         </FeedMeta>
                         <LikeAndCommentSection
-                            postId={feed.postId}
-                            isLiked={isLiked}
-                            likeCount={likeCount}
-                            comments={comments}
-                            setComments={setComments}
+                            feed={feed}
+                            likeCount={feed.likeCount}
+                            likedByMe={feed.likedByMe}
+                            initialComments={feed.comments}
                         />
                     </FeedContent>
                 </FeedCard>
@@ -84,22 +82,48 @@ function getTimeAgo(dateString) {
 }
 
 // 좋아요 & 댓글 컴포넌트
-const LikeAndCommentSection = ({ postId, isLiked, likeCount, comments, setComments }) => {
+const LikeAndCommentSection = ({ feed, likeCount, likedByMe, initialComments }) => {
+    const [comments, setComments] = useState(initialComments || []);
+    const [isLiked, setIsLiked] = useState(likedByMe || false);
+    const [currentLikeCount, setCurrentLikeCount] = useState(likeCount || 0);
     const [commentInput, setCommentInput] = useState("");
     const [replyInput, setReplyInput] = useState({});
     const [showReplyBox, setShowReplyBox] = useState({});
+    const myEmail = localStorage.getItem("userEmail");
+
+    // 댓글 목록 가져오기
+    const fetchComments = () => {
+        api.get(`/api/v1/comments/${feed.postId}`)
+            .then(res => setComments(res.data))
+            .catch(err => console.error("댓글 목록 불러오기 실패:", err));
+    };
+
+    useEffect(() => {
+        fetchComments();
+    }, [feed.postId]);
+
+    // 좋아요 버튼 클릭 핸들러
+    const handleLike = () => {
+        api.post("/api/v1/like/toggle", {
+            postId: feed.postId,
+            email: myEmail,
+        }).then(res => {
+            setIsLiked(res.data.liked);
+            setCurrentLikeCount(res.data.likeCount);
+        });
+    };
 
     // 댓글 추가
     const handleAddComment = () => {
         if (!commentInput.trim()) return;
         api.post("/api/v1/comments/register", {
-            postId: postId,
+            postId: feed.postId,
             parentId: 0,
             content: commentInput,
-            authorEmail: localStorage.getItem("userEmail"),
+            authorEmail: myEmail,
         })
-            .then((response) => {
-                setComments([...comments, response.data]);
+            .then(() => {
+                fetchComments();
                 setCommentInput("");
             })
             .catch((error) => {
@@ -110,39 +134,14 @@ const LikeAndCommentSection = ({ postId, isLiked, likeCount, comments, setCommen
     // 대댓글 추가
     const handleAddReply = (commentId) => {
         if (!replyInput[commentId]?.trim()) return;
-        // 실제 API 연동 필요
         api.post("/api/v1/comments/register", {
-            postId: postId,
+            postId: feed.postId,
             parentId: commentId,
             content: replyInput[commentId],
-            authorEmail: localStorage.getItem("userEmail"),
+            authorEmail: myEmail,
         })
-            .then((response) => {
-                // response.data를 실제 대댓글 데이터로 교체 필요
-                const comment = response.data;
-                console.log(comment);
-                setComments(
-                    comments.map((c) =>
-                        c.commentId === commentId
-                            ? {
-                                  ...c,
-                                  children: [
-                                      ...(c.children || []),
-                                      {
-                                          commentId: c.commentId,
-                                          content: replyInput[commentId],
-                                          authorNickname:
-                                              comment.authorNickname,
-                                          authorProfileImageUrl:
-                                              comment.authorProfileImageUrl,
-                                          createdAt: comment.createdAt,
-                                          depth: 1,
-                                      },
-                                  ],
-                              }
-                            : c
-                    )
-                );
+            .then(() => {
+                fetchComments();
                 setReplyInput({ ...replyInput, [commentId]: "" });
                 setShowReplyBox({ ...showReplyBox, [commentId]: false });
             })
@@ -151,18 +150,28 @@ const LikeAndCommentSection = ({ postId, isLiked, likeCount, comments, setCommen
             });
     };
 
+    // 댓글/대댓글 삭제
+    const handleDeleteComment = (commentId) => {
+        api.delete(`/api/v1/comments/${commentId}`,{
+          params: {
+            authorEmail: myEmail
+          }
+        })
+            .then(() => {
+                fetchComments();
+            })
+            .catch((error) => {
+                console.error("댓글 삭제 실패:", error);
+            });
+    };
+
     return (
         <div>
             <LikeButton
-                postId={postId}
-                email={localStorage.getItem("userEmail")}
-                initialLikeCount={likeCount}
-                initialIsLiked={isLiked}
+                isLiked={isLiked}
+                likeCount={currentLikeCount}
+                onClick={handleLike}
             />
-            {/* <LikeButton onClick={() => setLiked(l => !l)}>
-        {liked ? <FaHeart color="#e53e3e" /> : <FaRegHeart />}
-        <span style={{ marginLeft: 6 }}>{likeCount}개</span>
-      </LikeButton> */}
             <CommentSection>
                 <CommentInputBox>
                     <CommentInput
@@ -189,9 +198,14 @@ const LikeAndCommentSection = ({ postId, isLiked, likeCount, comments, setCommen
                                 <CommentBody>
                                     <CommentTop>
                                         <CommentNickname>
-                                            {comment.authorNickname ||
-                                                comment.authorEmail}
+                                            {comment.authorNickname || comment.authorEmail}
                                         </CommentNickname>
+                                        {/* 내가 쓴 댓글만 삭제 버튼 노출 */}
+                                        {comment.authorEmail === myEmail && (
+                                            <DeleteBtn onClick={() => handleDeleteComment(comment.commentId)}>
+                                                삭제
+                                            </DeleteBtn>
+                                        )}
                                     </CommentTop>
                                     <CommentContent>
                                         {comment.content}
@@ -205,9 +219,7 @@ const LikeAndCommentSection = ({ postId, isLiked, likeCount, comments, setCommen
                                                 setShowReplyBox({
                                                     ...showReplyBox,
                                                     [comment.commentId]:
-                                                        !showReplyBox[
-                                                            comment.commentId
-                                                        ],
+                                                        !showReplyBox[comment.commentId],
                                                 })
                                             }
                                         >
@@ -217,81 +229,60 @@ const LikeAndCommentSection = ({ postId, isLiked, likeCount, comments, setCommen
                                     {showReplyBox[comment.commentId] && (
                                         <ReplyInputBox>
                                             <ReplyInput
-                                                value={
-                                                    replyInput[
-                                                        comment.commentId
-                                                    ] || ""
-                                                }
+                                                value={replyInput[comment.commentId] || ""}
                                                 onChange={(e) =>
                                                     setReplyInput({
                                                         ...replyInput,
-                                                        [comment.commentId]:
-                                                            e.target.value,
+                                                        [comment.commentId]: e.target.value,
                                                     })
                                                 }
                                                 placeholder="답글을 입력하세요"
                                             />
                                             <ReplyAddBtn
-                                                onClick={() =>
-                                                    handleAddReply(
-                                                        comment.commentId
-                                                    )
-                                                }
+                                                onClick={() => handleAddReply(comment.commentId)}
                                             >
                                                 등록
                                             </ReplyAddBtn>
                                         </ReplyInputBox>
                                     )}
                                     {/* 대댓글 리스트 */}
-                                    {comment.children &&
-                                        comment.children.length > 0 && (
-                                            <ReplyList>
-                                                {comment.children.map(
-                                                    (reply) => (
-                                                        <ReplyItem
-                                                            key={
-                                                                reply.commentId
-                                                            }
-                                                        >
-                                                            <CommentProfileImg
-                                                                src={
-                                                                    reply.authorProfileImageUrl
-                                                                        ? `${baseURL}${reply.authorProfileImageUrl}`
-                                                                        : `${baseURL}/images/default-profile.png`
-                                                                }
-                                                                alt="profile"
-                                                            />
-                                                            <ReplyText>
-                                                                <CommentNickname>
-                                                                    {reply.authorNickname ||
-                                                                        reply.authorEmail}
-                                                                </CommentNickname>
-                                                                <span
-                                                                    style={{
-                                                                        marginLeft: 6,
-                                                                    }}
-                                                                >
-                                                                    {
-                                                                        reply.content
-                                                                    }
-                                                                </span>
-                                                                <span
-                                                                    style={{
-                                                                        marginLeft: 10,
-                                                                        color: "#888",
-                                                                        fontSize: 12,
-                                                                    }}
-                                                                >
-                                                                    {getTimeAgo(
-                                                                        reply.createdAt
-                                                                    )}
-                                                                </span>
-                                                            </ReplyText>
-                                                        </ReplyItem>
-                                                    )
-                                                )}
-                                            </ReplyList>
-                                        )}
+                                    {comment.children && comment.children.length > 0 && (
+                                        <ReplyList>
+                                            {comment.children.map((reply) => (
+                                                <ReplyItem key={reply.commentId}>
+                                                    <CommentProfileImg
+                                                        src={
+                                                            reply.authorProfileImageUrl
+                                                                ? `${baseURL}${reply.authorProfileImageUrl}`
+                                                                : `${baseURL}/images/default-profile.png`
+                                                        }
+                                                        alt="profile"
+                                                    />
+                                                    <ReplyText>
+                                                        <CommentNickname>
+                                                            {reply.authorNickname || reply.authorEmail}
+                                                        </CommentNickname>
+                                                        <span style={{ marginLeft: 6 }}>
+                                                            {reply.content}
+                                                        </span>
+                                                        <span style={{
+                                                            marginLeft: 10,
+                                                            color: "#888",
+                                                            fontSize: 12,
+                                                        }}>
+                                                            {getTimeAgo(reply.createdAt)}
+                                                        </span>
+                                                        {/* 내가 쓴 대댓글만 삭제 버튼 노출 */}
+                                                        {reply.authorEmail === myEmail && (
+                                                            <DeleteBtn onClick={() => handleDeleteComment(reply.commentId)}>
+                                                                삭제
+                                                            </DeleteBtn>
+                                                        )}
+                                                    </ReplyText>
+                                                </ReplyItem>
+                                            ))}
+                                        </ReplyList>
+                                    )}
                                 </CommentBody>
                             </CommentItem>
                         </React.Fragment>
@@ -496,4 +487,14 @@ const ReplyItem = styled.li`
 const ReplyText = styled.span`
     font-size: 14px;
     color: #555;
+`;
+
+const DeleteBtn = styled.button`
+    background: none;
+    border: none;
+    color: #e53e3e;
+    font-size: 13px;
+    margin-left: 8px;
+    cursor: pointer;
+    padding: 0;
 `;
