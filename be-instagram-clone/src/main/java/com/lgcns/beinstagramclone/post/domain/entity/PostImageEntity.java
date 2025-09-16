@@ -1,5 +1,6 @@
 package com.lgcns.beinstagramclone.post.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.lgcns.beinstagramclone.Image.domain.entity.ImageEntity;
 import jakarta.persistence.*;
 import lombok.*;

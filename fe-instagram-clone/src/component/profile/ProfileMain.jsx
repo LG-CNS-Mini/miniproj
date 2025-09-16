@@ -72,49 +72,66 @@ const PostImage = styled.img`
   object-fit: cover;
 `;
 
-const ProfileMain = ({profileUser}) => {
-  const baseURL = "http://localhost:8088"; // 실제 이미지 서버 주소로 변경 필요
-  const [profile, setProfile] = useState({
-    userName: "",
-    postCount: 0,
-    followerCount: 0,
-    followingCount: 0,
-    profileImage: localStorage.getItem("userImageUrl") || "",
-  });
+const FollowButton = styled.button`
+  background: #3897f0;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 24px;
+  font-size: 16px;
+  margin-left: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover {
+    background: #1877f2;
+  }
+`;
+
+const Nickname = styled.div`
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #222;
+`;
+
+const ProfileMain = ({ profileUser, setUserImageUrl, userImageUrl }) => {
+  const baseURL = "http://localhost:8088";
   const [posts, setPosts] = useState([]);
   const [userId, setUserId] = useState(profileUser || localStorage.getItem("userEmail"));
+  const [userName, setUserName] = useState("");
+  const [nickname, setNickname] = useState(""); // 닉네임 상태 추가
   const [isFeedReadOpen, setIsFeedReadOpen] = useState(false);  
-  const [userImageUrl, setUserImageUrl] = useState("");
   const [selectedPostId, setSelectedPostId] = useState(null);
+  const [postCount, setPostCount]  = useState(0);
+  const [followerCount, setFollowerCount]  = useState(0);
+  const [followingCount, setFollowingCount]  = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false); // 팔로우 상태 추가
+  
+  useEffect(() => {
+    setUserId(profileUser || localStorage.getItem("userEmail"));
+  }, [profileUser]);
 
   useEffect(() => {
-    // TODO : API 호출하여 프로필 정보 가져오기
-    // 프로필 정보 가져오기 (예시: userName, 팔로워, 팔로우, 게시물 수)
-    api.get(`/api/v1/user/${userId}`)
+    api.get(`/api/v2/inspire/user/${userId}`)
       .then(res => {
-        console.log(res.data);
-        // setProfile({
-        //   userName: res.data.userName,
-        //   postCount: res.data.postCount,
-        //   followerCount: res.data.followerCount,
-        //   followingCount: res.data.followingCount,
-        //   profileImage: res.data.profileImage || userImageUrl,
-        // });
+        setUserImageUrl(res.data.userImageUrl); // 상위에도 반영
+        setUserName(res.data.userName);
+        setNickname(res.data.nickname); // 닉네임 셋팅
+        setPostCount(res.data.postCount);
+        setFollowerCount(res.data.followerCount);
+        setFollowingCount(res.data.followingCount);
       });
-
-    // 게시글 목록 페이징 처리
     selectPosts();
-  }, [userId, userImageUrl]);
+  }, [userId]);
 
   const handlePostClick = (postId) => {
-    console.log("Post clicked:", postId);
-    // FeedReadModal 열기 로직 추가
     setSelectedPostId(postId);
     setIsFeedReadOpen(true);
   }
 
   const handlerPostDelete = () => {
-    // 게시글 삭제 후 목록 갱신
     selectPosts();
   }
 
@@ -123,30 +140,84 @@ const ProfileMain = ({profileUser}) => {
       params: { page: 1, size: 10 }
     })
       .then(res => {
-        console.log(res.data);
         setPosts(res.data || []);
       });
   }
 
+  // 팔로우 버튼 클릭 핸들러 (API 연동 필요)
+  const handleFollow = () => {
+    api.post(`/api/v1/follow`, { targetUserId: userId })
+      .then(() => {
+        // 팔로우 성공 시 UI 갱신 등 처리
+        alert("팔로우 완료!");
+      });
+  };
+
+  const myUserId = localStorage.getItem("userEmail");
+
+  // 프로필 이미지 업로드 핸들러
+  const handleProfileImageClick = () => {
+    // 유저 아이디가 내 아이디와 같을 때만 클릭 허용
+    if (userId !== myUserId) return;
+    document.getElementById("profile-image-input").click();
+  };
+
+  const handleProfileImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await api.post(`/api/v2/inspire/user/${userId}/profileimage`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      console.log(res.data.userImageUrl);
+      // 업로드 성공 시 프로필 이미지 갱신
+      setUserImageUrl(res.data.userImageUrl);
+    } catch (err) {
+      alert("이미지 업로드 실패");
+    }
+    setIsUploading(false);
+  };
+
   return (
     <Container>
-        <FeedReadModal
-            postId={selectedPostId}
-            isOpen={isFeedReadOpen}
-            onClose={() => setIsFeedReadOpen(false)}
-            onDelete={handlerPostDelete}
-        />
+      <input
+        type="file"
+        id="profile-image-input"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleProfileImageChange}
+      />
+      <FeedReadModal
+        userImageUrl={userImageUrl}
+        postId={selectedPostId}
+        isOpen={isFeedReadOpen}
+        onClose={() => setIsFeedReadOpen(false)}
+        onDelete={handlerPostDelete}
+      />
       <ProfileHeader>
         <ProfileImage
-          src={profile.profileImage ? `${baseURL}${profile.profileImage}` : "/default-profile.png"}
+          src={userImageUrl ? `${baseURL}${userImageUrl}` : `${baseURL}/images/default-profile.png`}
           alt="profile"
+          onClick={handleProfileImageClick}
+          style={{ cursor: "pointer", opacity: isUploading ? 0.5 : 1 }}
+          title="프로필 이미지 변경"
         />
         <ProfileInfo>
-          <UserName>{profile.userName}</UserName>
+          <UserName>
+            {userName}
+            {userId !== myUserId && (
+              <FollowButton onClick={handleFollow}>팔로우</FollowButton>
+            )}
+          </UserName>
+          <Nickname>{nickname}</Nickname>
           <Stats>
-            <Stat>게시물 <b>{profile.postCount}</b></Stat>
-            <Stat>팔로워 <b>{profile.followerCount}</b></Stat>
-            <Stat>팔로우 <b>{profile.followingCount}</b></Stat>
+            <Stat>게시물 <b>{postCount}</b></Stat>
+            <Stat>팔로워 <b>{followerCount}</b></Stat>
+            <Stat>팔로우 <b>{followingCount}</b></Stat>
           </Stats>
         </ProfileInfo>
         <SettingsIcon>⚙️</SettingsIcon>

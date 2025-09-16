@@ -21,7 +21,7 @@ function getTimeAgo(dateString) {
   return "방금 전";
 }
 
-const FeedReadModal = ({ postId, isOpen, onClose, onDelete }) => {
+const FeedReadModal = ({ postId, isOpen, onClose, onDelete, userImageUrl }) => {
   const [post, setPost] = useState(null);
   const modalRef = useRef(null);
   const [commentInput, setCommentInput] = useState("");
@@ -163,8 +163,8 @@ const FeedReadModal = ({ postId, isOpen, onClose, onDelete }) => {
         <ContentSection>
           <Header>
             {
-            localStorage.getItem("userImageUrl") || "" ? (
-              <ProfileThumb src={`${baseURL}${localStorage.getItem("userImageUrl")}`} />
+            userImageUrl? (
+              <ProfileThumb src={`${baseURL}${userImageUrl}`} />
             ) : (
               <ProfileThumb src={`${baseURL}/images/default-profile.png`} />
             )}

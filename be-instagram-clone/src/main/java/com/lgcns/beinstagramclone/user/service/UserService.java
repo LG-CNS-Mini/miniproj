@@ -1,23 +1,29 @@
 package com.lgcns.beinstagramclone.user.service;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.util.*;
 
+import com.lgcns.beinstagramclone.Image.domain.entity.ImageEntity;
+import com.lgcns.beinstagramclone.Image.repository.ImageRepository;
+import com.lgcns.beinstagramclone.user.domain.dto.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.lgcns.beinstagramclone.user.domain.dto.UserRequestDTO;
-import com.lgcns.beinstagramclone.user.domain.dto.UserResponseDTO;
-import com.lgcns.beinstagramclone.user.domain.dto.UserSuggestDTO;
 import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
 import com.lgcns.beinstagramclone.user.repository.RefreshTokenRepository;
 import com.lgcns.beinstagramclone.user.repository.UserRepository;
 import com.lgcns.beinstagramclone.util.JwtProvider;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UserService {
@@ -26,10 +32,16 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
+    private ImageRepository imageRepository;
+
+    @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     private JwtProvider provider;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     public UserResponseDTO signup(UserRequestDTO request) {
         System.out.println(">>> service signup");
@@ -85,5 +97,46 @@ public class UserService {
                         .build())
                 .toList();
 
+    }
+
+    public UserProfileResponseDTO selectUser(String userEmail) {
+        return userRepository.selectUser(userEmail);
+    }
+
+    @Transactional
+    public ProfileImageResponseDTO updateProfileImage(String userEmail, MultipartFile image){
+        String imageUrl = saveFileAndReturnPublicUrl(image);
+        UserEntity entity = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("유저 존재하지 않음"));
+        entity.setUserImageUrl(imageUrl);
+        userRepository.save(entity);
+        return new ProfileImageResponseDTO(imageUrl);
+    }
+
+    private String saveFileAndReturnPublicUrl(MultipartFile file) {
+        try {
+            String original = Optional.ofNullable(file.getOriginalFilename()).orElse("file");
+            String ext = original.contains(".") ? original.substring(original.lastIndexOf('.') + 1) : "bin";
+
+            LocalDate today = LocalDate.now();
+            Path dir = Paths.get(uploadDir,
+                    String.valueOf(today.getYear()),
+                    String.format("%02d", today.getMonthValue()),
+                    String.format("%02d", today.getDayOfMonth()));
+
+            // 디렉토리 생성 (없으면 자동 생성)
+            Files.createDirectories(dir);
+
+            String filename = UUID.randomUUID() + "." + ext;
+            Path saved = dir.resolve(filename);
+            file.transferTo(saved.toFile());
+
+            // URL 반환 (정적 리소스 핸들러랑 맞춰줘야 함)
+            return "/images/" + today.getYear() + "/"
+                    + String.format("%02d", today.getMonthValue()) + "/"
+                    + String.format("%02d", today.getDayOfMonth()) + "/"
+                    + filename;
+        } catch (Exception e) {
+            throw new RuntimeException("이미지 저장 실패: " + file.getOriginalFilename(), e);
+        }
     }
 }

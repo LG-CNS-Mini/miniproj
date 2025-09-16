@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import api from '../../api/axios';
-
+import { useEffect } from 'react';
 // Styled Components
 const NavigationContainer = styled.nav`
   width: 250px;
@@ -195,24 +195,29 @@ const UserEmail = styled.span`
 // Main Navigation Component
 const Navigation = ({
   activeItem = 'home',
-  profileImage,
+  userImageUrl,
   feedCreateModalOpen,
   setFeedPage,
-  setProfileUser
+  setProfileUser,
+  profileUser
 }) => {
   const [searchMode, setSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState(null);
-
   const navItems = [
     { key: 'home', label: '홈', icon: <HomeIcon /> },
     { key: 'search', label: '검색', icon: <SearchIcon /> },
     { key: 'create', label: '만들기', icon: <CreateIcon /> },
   ];
-  const userImageUrl = localStorage.getItem("userImageUrl")
-    ? `${import.meta.env.VITE_APP_JSON_SERVER_URL}${localStorage.getItem("userImageUrl")}`
-    : `${import.meta.env.VITE_APP_JSON_SERVER_URL}/images/default-profile.png`;
-
+  const baseURL = import.meta.env.VITE_APP_JSON_SERVER_URL;
+  const [myUserImageUrl, setMyUserImageUrl] = useState(localStorage.getItem("userImageUrl") || "");
+  const myUserId = localStorage.getItem("userEmail") || "";
+  useEffect(() => {
+    // 나의 유저 아이디가 아닐경우에는 myUserImageUrl을 업데이트 하지 않음
+    if(!profileUser || profileUser === myUserId){
+      setMyUserImageUrl(userImageUrl);
+    }
+  }, [userImageUrl]);
   const moveURL = useNavigate();
 
   const onClickNavigate = (key) => {
@@ -229,7 +234,7 @@ const Navigation = ({
         setSearchMode(false);
         break;
       case 'profile':
-        setProfileUser(null);
+        setProfileUser("");
         setFeedPage('profile');
         setSearchMode(false);
         break;
@@ -246,7 +251,7 @@ const Navigation = ({
         Authorization: `${localStorage.getItem("accessToken")}`
       } })
       .then((res) => {
-        setSearchResult(res.data);
+        setSearchResult(res.data.filter(user => user.email !== myUserId)); // 내 아이디는 검색 결과에서 제외
       }).catch((err) => {
         setSearchResult([]);
       });
@@ -256,7 +261,8 @@ const Navigation = ({
   };
 
   const handleUserSelect = (user) => {
-    setProfileUser(user);
+    console.log(user.email)
+    setProfileUser(user.email);
     setFeedPage('explore');
     setSearchMode(false);
     setSearchQuery('');
@@ -286,8 +292,11 @@ const Navigation = ({
               style={searchMode ? { justifyContent: 'center', padding: '12px 0' } : {}}
             >
               <IconContainer>
-                {userImageUrl ? (
-                  <ProfileImage src={userImageUrl} alt="프로필" />
+                {myUserImageUrl ? (
+                  <ProfileImage 
+                    src={myUserImageUrl ? `${baseURL}${myUserImageUrl}` : `${baseURL}/images/default-profile.png`}
+                    alt="프로필"
+                  />
                 ) : (
                   <div style={{
                     width: '24px',

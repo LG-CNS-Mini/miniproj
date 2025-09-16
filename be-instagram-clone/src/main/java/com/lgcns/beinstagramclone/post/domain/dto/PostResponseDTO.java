@@ -25,7 +25,6 @@ public class PostResponseDTO {
     private Integer postID;
     private String content;
 
-    // ✅ 단일 문자열 → 리스트로 변경
     private List<String> hashtags;
 
     private LocalDateTime createDate;

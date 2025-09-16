@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.lgcns.beinstagramclone.comment.domain.entity.CommentEntity;
 import com.lgcns.beinstagramclone.hashtag.domain.entity.HashtagEntity;
 import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
 
@@ -31,7 +33,7 @@ import lombok.ToString;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = { "author", "images" })
+@ToString(exclude = { "author", "images", })
 public class PostEntity {
 
     @Id
@@ -40,9 +42,6 @@ public class PostEntity {
 
     @Column(nullable = false, length = 2000)
     private String content;
-
-    // @Column(length = 255)
-    // private String hashtag;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createDate;
@@ -58,6 +57,10 @@ public class PostEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PostHashtagEntity> tags = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @Builder.Default
+    private List<CommentEntity> comments = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -78,4 +81,5 @@ public class PostEntity {
                 .build();
         this.tags.add(postHashtagEntity);
     }
+
 }
