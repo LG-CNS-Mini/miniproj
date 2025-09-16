@@ -1,12 +1,10 @@
 package com.lgcns.beinstagramclone.user.ctrl;
 
+import com.lgcns.beinstagramclone.user.domain.dto.*;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.lgcns.beinstagramclone.user.domain.dto.UserRequestDTO;
-import com.lgcns.beinstagramclone.user.domain.dto.UserResponseDTO;
-import com.lgcns.beinstagramclone.user.domain.dto.UserSuggestDTO;
 import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
 import com.lgcns.beinstagramclone.user.service.UserService;
 
@@ -29,6 +27,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v2/inspire/user")
@@ -93,6 +92,23 @@ public class UserCtrl {
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "limit", defaultValue = "10") int limit) {
         return ResponseEntity.ok(userService.suggestUsers(keyword, limit));
+    }
+
+    @GetMapping("/{userEmail}")
+    public ResponseEntity<UserProfileResponseDTO> getUser(
+            @PathVariable("userEmail") String userEmail) {
+        return ResponseEntity.ok().body(userService.selectUser(userEmail));
+    }
+
+    @PostMapping("/{userId}/profileimage")
+    public ResponseEntity<ProfileImageResponseDTO> updateProfileImage(
+            @PathVariable("userId") String userId,
+            @RequestParam("image") MultipartFile image) {
+        try {
+            return ResponseEntity.ok(userService.updateProfileImage(userId, image));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 }
