@@ -18,7 +18,7 @@ const FeedMain = ({ feedPage, profileUser }) => {
   return (
     <FeedContainer>
       {feeds.map(feed => (
-        <FeedCard key={feed.postId}>
+        <FeedCard key={feed.postID}>
           <FeedHeader>
             <ProfileThumb src={`${baseURL}/images/default-profile.png`} />
             <AuthorEmail>{feed.authorEmail}</AuthorEmail>
