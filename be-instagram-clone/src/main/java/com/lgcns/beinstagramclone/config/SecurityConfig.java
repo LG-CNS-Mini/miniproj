@@ -87,7 +87,8 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/api/v2/inspire/sse/notifications"),
                                 new AntPathRequestMatcher("/api/v1/post/**"),
                                 new AntPathRequestMatcher("/images/**"),
-                                new AntPathRequestMatcher("/api/v2/inspire/user/suggest")
+                                new AntPathRequestMatcher("/api/v2/inspire/user/suggest"),
+                                new AntPathRequestMatcher("/api/v1/comments/**")
                         ).permitAll() // 이 경로들은 모두 허용!
                         // Preflight 요청 (OPTIONS)도 모두 허용하도록 추가해요.
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

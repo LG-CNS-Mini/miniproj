@@ -41,7 +41,7 @@ public class JwtFilter implements Filter {
         System.out.println("[debug] >>> JwtFilter doFilter");
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
-
+        System.out.println("req 보여주기"+req);
         String path = req.getRequestURI();
         System.out.println("[debug] >>> client path " + path);
         String method = req.getMethod();
@@ -105,6 +105,7 @@ public class JwtFilter implements Filter {
                 ||  path.startsWith("/api/v2/inspire/sse/subscribe")
                 ||  path.startsWith("/api/v2/inspire/sse/notifications")
                 ||  path.startsWith("/api/v1/post")
+                ||  path.startsWith("/api/v1/comments")
                 ||  path.startsWith("/api/v1/post/posts")
                 ||  path.startsWith("/images/")
                 ||  path.startsWith("/api/v1/follow")

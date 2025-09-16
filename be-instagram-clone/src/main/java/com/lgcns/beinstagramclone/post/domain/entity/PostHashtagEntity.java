@@ -2,6 +2,8 @@ package com.lgcns.beinstagramclone.post.domain.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.lgcns.beinstagramclone.hashtag.domain.entity.HashtagEntity;
 
 import jakarta.persistence.Column;
