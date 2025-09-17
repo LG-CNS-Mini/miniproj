@@ -23,10 +23,6 @@ const LikeButton = ({ email, postId, initialIsLiked, initialLikeCount }) => {
 
         setIsLiked(!isLiked);
         setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
-
-        console.log("[debug] >>> 좋아요 클릭 토큰 : " + token);
-        console.log("[debug] >>> 보내는 이메일아이디 : " + email);
-        console.log("[debug] >>> 보내는 게시물아이디 : " + postId);
         try {
             const endpoint = isLiked
                 ? "/api/v2/inspire/like/unlike"

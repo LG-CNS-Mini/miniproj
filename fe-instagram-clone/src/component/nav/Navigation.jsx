@@ -210,7 +210,8 @@ const Navigation = ({
     { key: 'create', label: '만들기', icon: <CreateIcon /> },
   ];
   const baseURL = import.meta.env.VITE_APP_JSON_SERVER_URL;
-  const [myUserImageUrl, setMyUserImageUrl] = useState(localStorage.getItem("userImageUrl") || "");
+  const [myUserImageUrl, setMyUserImageUrl] = useState(localStorage.getItem("userImageUrl"));
+  
   const myUserId = localStorage.getItem("userEmail") || "";
   useEffect(() => {
     // 나의 유저 아이디가 아닐경우에는 myUserImageUrl을 업데이트 하지 않음

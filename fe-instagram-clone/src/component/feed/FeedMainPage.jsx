@@ -12,6 +12,7 @@ const FeedMainPage = ({feedPage, profileUser, userImageUrl, setUserImageUrl}) =>
                                         userImageUrl={userImageUrl}/> : null}
             {feedPage === 'explore' ? <ProfileMain 
                                         setUserImageUrl={setUserImageUrl}
+                                        userImageUrl={userImageUrl}
                                         profileUser={profileUser}/> : null}
         </>
     )

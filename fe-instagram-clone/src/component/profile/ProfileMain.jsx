@@ -117,7 +117,8 @@ const ProfileMain = ({ profileUser, setUserImageUrl, userImageUrl }) => {
     api.get(`/api/v2/inspire/user/${userId}/${myUserId}`)
       .then(res => {
         console.log(res.data);
-        setUserImageUrl(res.data.userImageUrl); // 상위에도 반영
+        setUserImageUrl(res.data.userImageUrl);
+        console.log(userImageUrl);
         setUserName(res.data.userName);
         setNickname(res.data.nickname); // 닉네임 셋팅
         setPostCount(res.data.postCount);

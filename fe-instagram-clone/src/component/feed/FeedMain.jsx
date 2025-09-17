@@ -1,42 +1,82 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import styled from "styled-components";
 import api from "../../api/axios";
-import { FaRegHeart, FaHeart } from "react-icons/fa"; // 아이콘 추가
 import FeedImageSlider from "./FeedImageSlider";
 import LikeButton from "../like/likeButton";
+import Spinner from "../common/Spinner"; // Spinner import
 
 const baseURL = import.meta.env.VITE_APP_JSON_SERVER_URL;
 
 const FeedMain = ({ feedPage, profileUser }) => {
     const [feeds, setFeeds] = useState([]);
-    const [comments, setComments] = useState([]);
-    const [isLiked, setIsLiked] = useState(false);
-    const [likeCount, setLikeCount] = useState(0);
+    const [page, setPage] = useState(0);
+    const [hasNext, setHasNext] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const observer = useRef();
 
+    // 첫 페이지 로드
     useEffect(() => {
-        api.get("api/v1/post/following", {
-            params: {
-                page: 0,
-                size: 5,
-                email: localStorage.getItem("userEmail"),
-            },
-        }).then((res) => {
-            console.log(res.data.items);
-            setFeeds(res.data.items || []);
-        });
+        setFeeds([]);
+        setPage(0);
+        setHasNext(true);
+        fetchFeeds(0, true);
     }, []);
+
+    // 다음 페이지 불러오기
+    const fetchFeeds = async (pageNum, isInit = false) => {
+        setLoading(true);
+        try {
+            const res = await api.get("api/v1/post/following", {
+                params: {
+                    page: pageNum,
+                    size: 5,
+                    email: localStorage.getItem("userEmail"),
+                },
+            });
+            const items = res.data.items || [];
+            setHasNext(res.data.hasNext);
+            if (isInit) {
+                setFeeds(items);
+            } else {
+                setFeeds((prev) => [...prev, ...items]);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 스크롤 감지 ref
+    const lastFeedRef = useCallback(
+        (node) => {
+            if (loading) return;
+            if (observer.current) observer.current.disconnect();
+            observer.current = new window.IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && hasNext) {
+                    fetchFeeds(page + 1);
+                    setPage((prev) => prev + 1);
+                }
+            });
+            if (node) observer.current.observe(node);
+        },
+        [loading, hasNext, page]
+    );
 
     return (
         <FeedContainer>
-            {feeds.map((feed) => (
-                <FeedCard key={feed.postId}>
+            {feeds.map((feed, idx) => (
+                <FeedCard
+                    key={feed.postId}
+                    ref={idx === feeds.length - 1 ? lastFeedRef : null}
+                >
                     <FeedHeader>
                         <ProfileThumb
-                            src={feed.authorProfileImageUrl
-                                ? `${baseURL}${feed.authorProfileImageUrl}`
-                                : `${baseURL}/images/default-profile.png`}
+                            src={
+                                feed.authorProfileImageUrl
+                                    ? `${baseURL}${feed.authorProfileImageUrl}`
+                                    : `${baseURL}/images/default-profile.png`
+                            }
                         />
-                        <AuthorEmail>{feed.authorEmail}</AuthorEmail>
+                        <AuthorEmail>{feed.authorName}</AuthorEmail>
                     </FeedHeader>
                     <FeedImageSlider images={feed.imageUrls} />
                     <FeedContent>
@@ -59,6 +99,11 @@ const FeedMain = ({ feedPage, profileUser }) => {
                     </FeedContent>
                 </FeedCard>
             ))}
+            {loading && (
+                <SpinnerWrapper>
+                    <Spinner />
+                </SpinnerWrapper>
+            )}
         </FeedContainer>
     );
 };
@@ -82,7 +127,12 @@ function getTimeAgo(dateString) {
 }
 
 // 좋아요 & 댓글 컴포넌트
-const LikeAndCommentSection = ({ feed, likeCount, likedByMe, initialComments }) => {
+const LikeAndCommentSection = ({
+    feed,
+    likeCount,
+    likedByMe,
+    initialComments,
+}) => {
     const [comments, setComments] = useState(initialComments || []);
     const [isLiked, setIsLiked] = useState(likedByMe || false);
     const [currentLikeCount, setCurrentLikeCount] = useState(likeCount || 0);
@@ -90,38 +140,30 @@ const LikeAndCommentSection = ({ feed, likeCount, likedByMe, initialComments }) 
     const [replyInput, setReplyInput] = useState({});
     const [showReplyBox, setShowReplyBox] = useState({});
     const myEmail = localStorage.getItem("userEmail");
-
     // 댓글 목록 가져오기
     const fetchComments = () => {
-        api.get(`/api/v1/comments/${feed.postId}`)
-            .then(res => setComments(res.data))
-            .catch(err => console.error("댓글 목록 불러오기 실패:", err));
+        api
+            .get(`/api/v1/comments/${feed.postId}`)
+            .then((res) => {
+                setComments(res.data);
+            })
+            .catch((err) => console.error("댓글 목록 불러오기 실패:", err));
     };
 
     useEffect(() => {
         fetchComments();
     }, [feed.postId]);
 
-    // 좋아요 버튼 클릭 핸들러
-    const handleLike = () => {
-        api.post("/api/v1/like/toggle", {
-            postId: feed.postId,
-            email: myEmail,
-        }).then(res => {
-            setIsLiked(res.data.liked);
-            setCurrentLikeCount(res.data.likeCount);
-        });
-    };
-
     // 댓글 추가
     const handleAddComment = () => {
         if (!commentInput.trim()) return;
-        api.post("/api/v1/comments/register", {
-            postId: feed.postId,
-            parentId: 0,
-            content: commentInput,
-            authorEmail: myEmail,
-        })
+        api
+            .post("/api/v1/comments/register", {
+                postId: feed.postId,
+                parentId: 0,
+                content: commentInput,
+                authorEmail: myEmail,
+            })
             .then(() => {
                 fetchComments();
                 setCommentInput("");
@@ -134,12 +176,13 @@ const LikeAndCommentSection = ({ feed, likeCount, likedByMe, initialComments }) 
     // 대댓글 추가
     const handleAddReply = (commentId) => {
         if (!replyInput[commentId]?.trim()) return;
-        api.post("/api/v1/comments/register", {
-            postId: feed.postId,
-            parentId: commentId,
-            content: replyInput[commentId],
-            authorEmail: myEmail,
-        })
+        api
+            .post("/api/v1/comments/register", {
+                postId: feed.postId,
+                parentId: commentId,
+                content: replyInput[commentId],
+                authorEmail: myEmail,
+            })
             .then(() => {
                 fetchComments();
                 setReplyInput({ ...replyInput, [commentId]: "" });
@@ -152,11 +195,12 @@ const LikeAndCommentSection = ({ feed, likeCount, likedByMe, initialComments }) 
 
     // 댓글/대댓글 삭제
     const handleDeleteComment = (commentId) => {
-        api.delete(`/api/v1/comments/${commentId}`,{
-          params: {
-            authorEmail: myEmail
-          }
-        })
+        api
+            .delete(`/api/v1/comments/${commentId}`, {
+                params: {
+                    authorEmail: myEmail,
+                },
+            })
             .then(() => {
                 fetchComments();
             })
@@ -168,9 +212,10 @@ const LikeAndCommentSection = ({ feed, likeCount, likedByMe, initialComments }) 
     return (
         <div>
             <LikeButton
-                isLiked={isLiked}
-                likeCount={currentLikeCount}
-                onClick={handleLike}
+                email={myEmail}
+                postId={feed.postId}
+                initialIsLiked={isLiked}
+                initialLikeCount={currentLikeCount}
             />
             <CommentSection>
                 <CommentInputBox>
@@ -198,11 +243,17 @@ const LikeAndCommentSection = ({ feed, likeCount, likedByMe, initialComments }) 
                                 <CommentBody>
                                     <CommentTop>
                                         <CommentNickname>
-                                            {comment.authorNickname || comment.authorEmail}
+                                            {comment.authorNickname}
                                         </CommentNickname>
                                         {/* 내가 쓴 댓글만 삭제 버튼 노출 */}
                                         {comment.authorEmail === myEmail && (
-                                            <DeleteBtn onClick={() => handleDeleteComment(comment.commentId)}>
+                                            <DeleteBtn
+                                                onClick={() =>
+                                                    handleDeleteComment(
+                                                        comment.commentId
+                                                    )
+                                                }
+                                            >
                                                 삭제
                                             </DeleteBtn>
                                         )}
@@ -239,7 +290,9 @@ const LikeAndCommentSection = ({ feed, likeCount, likedByMe, initialComments }) 
                                                 placeholder="답글을 입력하세요"
                                             />
                                             <ReplyAddBtn
-                                                onClick={() => handleAddReply(comment.commentId)}
+                                                onClick={() =>
+                                                    handleAddReply(comment.commentId)
+                                                }
                                             >
                                                 등록
                                             </ReplyAddBtn>
@@ -260,21 +313,30 @@ const LikeAndCommentSection = ({ feed, likeCount, likedByMe, initialComments }) 
                                                     />
                                                     <ReplyText>
                                                         <CommentNickname>
-                                                            {reply.authorNickname || reply.authorEmail}
+                                                            {reply.authorNickname ||
+                                                                reply.authorEmail}
                                                         </CommentNickname>
                                                         <span style={{ marginLeft: 6 }}>
                                                             {reply.content}
                                                         </span>
-                                                        <span style={{
-                                                            marginLeft: 10,
-                                                            color: "#888",
-                                                            fontSize: 12,
-                                                        }}>
+                                                        <span
+                                                            style={{
+                                                                marginLeft: 10,
+                                                                color: "#888",
+                                                                fontSize: 12,
+                                                            }}
+                                                        >
                                                             {getTimeAgo(reply.createdAt)}
                                                         </span>
                                                         {/* 내가 쓴 대댓글만 삭제 버튼 노출 */}
                                                         {reply.authorEmail === myEmail && (
-                                                            <DeleteBtn onClick={() => handleDeleteComment(reply.commentId)}>
+                                                            <DeleteBtn
+                                                                onClick={() =>
+                                                                    handleDeleteComment(
+                                                                        reply.commentId
+                                                                    )
+                                                                }
+                                                            >
                                                                 삭제
                                                             </DeleteBtn>
                                                         )}
@@ -476,12 +538,15 @@ const ReplyAddBtn = styled.button`
 
 const ReplyList = styled.ul`
     list-style: none;
-    padding-left: 18px;
+    padding-left: 44px; // 좌측 여백을 늘려줌
     margin-top: 4px;
 `;
 
 const ReplyItem = styled.li`
     margin-bottom: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
 `;
 
 const ReplyText = styled.span`
@@ -497,4 +562,11 @@ const DeleteBtn = styled.button`
     margin-left: 8px;
     cursor: pointer;
     padding: 0;
+`;
+
+const SpinnerWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 0;
 `;

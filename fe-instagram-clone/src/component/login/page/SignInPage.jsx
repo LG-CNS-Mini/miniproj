@@ -120,9 +120,10 @@ const SignInPage = () => {
                     response.headers.get("refresh-token")
                 );
                 // user
+                console.log(response.data);
                 localStorage.setItem("userInfo", response.data.name);
                 localStorage.setItem("userEmail", response.data.email);
-                localStorage.setItem("userImageUrl",response.data.userImageUrl);
+                localStorage.setItem("userImageUrl",response.data.userImageUrl || "");
 
                 moveUrl("/main");
             })

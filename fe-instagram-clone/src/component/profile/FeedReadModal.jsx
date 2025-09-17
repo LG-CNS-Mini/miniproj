@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import api from "../../api/axios";
 import FeedCreateEditModal from "../modal/FeedCreateEditModal";
+import LikeButton from "../like/likeButton"; // FeedMain에서 사용한 LikeButton import 필요
 
 const baseURL = "http://localhost:8088"; // 이미지 서버 주소
 
@@ -23,19 +24,97 @@ function getTimeAgo(dateString) {
 
 const FeedReadModal = ({ postId, isOpen, onClose, onDelete, userImageUrl }) => {
   const [post, setPost] = useState(null);
-  const modalRef = useRef(null);
+  const [comments, setComments] = useState([]);
+  const [likeCount, setLikeCount] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
   const [commentInput, setCommentInput] = useState("");
+  const [replyInput, setReplyInput] = useState({});
+  const [showReplyBox, setShowReplyBox] = useState({});
   const [menuOpen, setMenuOpen] = useState(false);
   const [isOpenEditModal, setIsOpenEditModal] = useState(false);
-
+  const myEmail = localStorage.getItem("userEmail");
+  const modalRef = useRef();
+  // 게시글, 댓글, 좋아요 정보 불러오기
   useEffect(() => {
     if (!isOpen || !postId) return;
     api.get(`/api/v1/post/read/${postId}`)
       .then(res => {
         setPost(res.data);
+        setLikeCount(res.data.likeCount || 0);
+        setIsLiked(res.data.likedByMe || false);
       })
       .catch(() => setPost(null));
+
+    fetchComments();
   }, [isOpen, postId]);
+
+  // 댓글 목록 불러오기
+  const fetchComments = () => {
+    api.get(`/api/v1/comments/${postId}`)
+      .then(res => setComments(res.data))
+      .catch(err => setComments([]));
+  };
+
+  // 좋아요 토글
+  const handleLike = () => {
+    api.post("/api/v1/like/toggle", {
+      postId,
+      email: myEmail,
+    }).then(res => {
+      setIsLiked(res.data.liked);
+      setLikeCount(res.data.likeCount);
+    });
+  };
+
+  // 댓글 추가
+  const handleAddComment = () => {
+    if (!commentInput.trim()) return;
+    api.post("/api/v1/comments/register", {
+      postId,
+      parentId: 0,
+      content: commentInput,
+      authorEmail: myEmail,
+    })
+      .then(() => {
+        fetchComments();
+        setCommentInput("");
+      })
+      .catch((error) => {
+        console.error("댓글 추가 실패:", error);
+      });
+  };
+
+  // 대댓글 추가
+  const handleAddReply = (commentId) => {
+    if (!replyInput[commentId]?.trim()) return;
+    api.post("/api/v1/comments/register", {
+      postId,
+      parentId: commentId,
+      content: replyInput[commentId],
+      authorEmail: myEmail,
+    })
+      .then(() => {
+        fetchComments();
+        setReplyInput({ ...replyInput, [commentId]: "" });
+        setShowReplyBox({ ...showReplyBox, [commentId]: false });
+      })
+      .catch((error) => {
+        console.error("대댓글 추가 실패:", error);
+      });
+  };
+
+  // 댓글/대댓글 삭제
+  const handleDeleteComment = (commentId) => {
+    api.delete(`/api/v1/comments/${commentId}`, {
+      params: { authorEmail: myEmail }
+    })
+      .then(() => {
+        fetchComments();
+      })
+      .catch((error) => {
+        console.error("댓글 삭제 실패:", error);
+      });
+  };
 
   // ESC 키로 닫기
   useEffect(() => {
@@ -162,8 +241,7 @@ const FeedReadModal = ({ postId, isOpen, onClose, onDelete, userImageUrl }) => {
         </ImageSection>
         <ContentSection>
           <Header>
-            {
-            userImageUrl? (
+            {userImageUrl ? (
               <ProfileThumb src={`${baseURL}${userImageUrl}`} />
             ) : (
               <ProfileThumb src={`${baseURL}/images/default-profile.png`} />
@@ -180,24 +258,115 @@ const FeedReadModal = ({ postId, isOpen, onClose, onDelete, userImageUrl }) => {
           <PostContent>
             {post.content}
           </PostContent>
+          
+          {/* 좋아요 버튼 및 좋아요 수 */}
+          <LikeCount>좋아요 {likeCount}개</LikeCount>
+
+          {/* 댓글 목록 */}
           <Comments>
-            {post.comments && post.comments.length > 0 ? (
-              post.comments.map(c => (
-                <CommentItem key={c.id}>
-                  <b>{c.authorName}</b> {c.text}
-                </CommentItem>
-              ))
+            <CommentInputBox>
+              <CommentInput
+                value={commentInput}
+                onChange={e => setCommentInput(e.target.value)}
+                placeholder="댓글 달기"
+              />
+              <PostBtn onClick={handleAddComment}>게시</PostBtn>
+            </CommentInputBox>
+            {comments && comments.length > 0 ? (
+              <CommentList>
+                {comments.map(comment => (
+                  <CommentItem key={comment.commentId}>
+                    <CommentProfileImg
+                      src={comment.authorProfileImageUrl
+                        ? `${baseURL}${comment.authorProfileImageUrl}`
+                        : `${baseURL}/images/default-profile.png`}
+                      alt="profile"
+                    />
+                    <CommentBody>
+                      <CommentRow>
+                        <CommentNickname>{comment.authorNickname || comment.authorEmail}</CommentNickname>
+                        <CommentContent>{comment.content}</CommentContent>
+                        {comment.authorEmail === myEmail && (
+                          <DeleteBtn onClick={() => handleDeleteComment(comment.commentId)}>
+                            삭제
+                          </DeleteBtn>
+                        )}
+                      </CommentRow>
+                      <CommentMeta>
+                        <span>{getTimeAgo(comment.createdAt)}</span>
+                        <ReplyBtn
+                          onClick={() =>
+                            setShowReplyBox({
+                              ...showReplyBox,
+                              [comment.commentId]: !showReplyBox[comment.commentId],
+                            })
+                          }
+                        >
+                          답글 달기
+                        </ReplyBtn>
+                      </CommentMeta>
+                      {showReplyBox[comment.commentId] && (
+                        <ReplyInputBox>
+                          <ReplyInput
+                            value={replyInput[comment.commentId] || ""}
+                            onChange={e =>
+                              setReplyInput({
+                                ...replyInput,
+                                [comment.commentId]: e.target.value,
+                              })
+                            }
+                            placeholder="답글을 입력하세요"
+                          />
+                          <ReplyAddBtn onClick={() => handleAddReply(comment.commentId)}>
+                            등록
+                          </ReplyAddBtn>
+                        </ReplyInputBox>
+                      )}
+                      {/* 대댓글 리스트 */}
+                      {comment.children && comment.children.length > 0 && (
+                        <ReplyList>
+                          {comment.children.map(reply => (
+                            <ReplyItem key={reply.commentId}>
+                              <CommentProfileImg
+                                src={reply.authorProfileImageUrl
+                                  ? `${baseURL}${reply.authorProfileImageUrl}`
+                                  : `${baseURL}/images/default-profile.png`}
+                                alt="profile"
+                              />
+                              <ReplyText>
+                                <CommentNickname>
+                                  {reply.authorNickname || reply.authorEmail}
+                                </CommentNickname>
+                                <span style={{ marginLeft: 6 }}>
+                                  {reply.content}
+                                </span>
+                                <span style={{
+                                  marginLeft: 10,
+                                  color: "#888",
+                                  fontSize: 12,
+                                }}>
+                                  {getTimeAgo(reply.createdAt)}
+                                </span>
+                                {reply.authorEmail === myEmail && (
+                                  <DeleteBtn onClick={() => handleDeleteComment(reply.commentId)}>
+                                    삭제
+                                  </DeleteBtn>
+                                )}
+                              </ReplyText>
+                            </ReplyItem>
+                          ))}
+                        </ReplyList>
+                      )}
+                    </CommentBody>
+                  </CommentItem>
+                ))}
+              </CommentList>
             ) : (
               <NoComment>아직 댓글이 없습니다.<br />댓글을 남겨보세요.</NoComment>
             )}
           </Comments>
           <Footer>
-            <LikeCount>좋아요 {post.likeCount || 0}개</LikeCount>
             <DateBox>{getTimeAgo(post.createDate)}</DateBox>
-            <CommentInputBox>
-              <CommentInput onChange={e => setCommentInput(e.target.value)} placeholder="댓글 달기" />
-              <PostBtn onClick={handlerSaveComment}>게시</PostBtn>
-            </CommentInputBox>
           </Footer>
         </ContentSection>
       </Modal>
@@ -293,8 +462,9 @@ const Comments = styled.div`
 `;
 
 const CommentItem = styled.div`
-  margin-bottom: 12px;
-  font-size: 15px;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
 `;
 
 const NoComment = styled.div`
@@ -389,4 +559,113 @@ const MenuItemDelete = styled(MenuItem)`
   &:hover {
     background: #ffeaea;
   }
+`;
+
+const CommentList = styled.div`
+  margin-top: 16px;
+`;
+
+const CommentProfileImg = styled.img`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+`;
+
+const CommentBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+`;
+
+const CommentRow = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const CommentNickname = styled.span`
+  font-weight: 600;
+  font-size: 15px;
+  margin-right: 6px;
+  color: #222;
+`;
+
+const CommentContent = styled.span`
+  font-size: 15px;
+  color: #222;
+`;
+
+const CommentMeta = styled.div`
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const ReplyBtn = styled.button`
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 12px;
+  cursor: pointer;
+`;
+
+const ReplyInputBox = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+`;
+
+const ReplyInput = styled.input`
+  flex: 1;
+  border: 1px solid #ddd;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 8px;
+  outline: none;
+`;
+
+const ReplyAddBtn = styled.button`
+  background: #3b82f6;
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+`;
+
+const ReplyList = styled.div`
+  margin-top: 12px;
+  margin-left: 44px;
+`;
+
+const ReplyItem = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+`;
+
+const ReplyText = styled.div`
+  flex: 1;
+  background: #f9f9f9;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const DeleteBtn = styled.button`
+  background: none;
+  border: none;
+  color: #e53e3e;
+  font-size: 13px;
+  margin-left: 8px;
+  cursor: pointer;
+  padding: 0;
 `;

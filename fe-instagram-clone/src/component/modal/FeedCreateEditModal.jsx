@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { X } from 'lucide-react';
 import FileUploadComponent from '../upload/FileUploadComponent';
 import api from '../../api/axios';
+import Spinner from '../common/Spinner';
 
 const Overlay = styled.div`
   position: fixed;
@@ -358,6 +359,25 @@ const HashtagEmpty = styled.div`
   color: #888;
 `;
 
+const TextAreaWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const SpinnerOverlay = styled.div`
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(255,255,255,0.5);
+  z-index: 2;
+`;
+
 const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
   const modalRef = useRef(null);
   const textAreaRef = useRef(null);
@@ -370,6 +390,7 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
   const [hashtagQuery, setHashtagQuery] = useState("");
   const [hashtagSearchResults, setHashtagSearchResults] = useState([]);
   const [hashtagResults, setHashtagResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
       setFiles([]);
@@ -593,7 +614,7 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
 
   if (!isOpen) return null;
 
-  const handlerGetHashTag = () => {
+  const handlerGetHashTag = async () => {
     const formData = new FormData();
 
     files.forEach((file, i) => {
@@ -601,18 +622,20 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
     });
 
     // TODO : AI를 통한 해시태그 추출 API 호출
-    api.post("/api/v1/post/ai/hashtag", formData, {
+    setLoading(true);
+    const response = await api.post("/api/v1/post/ai/hashtag", formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
-    }).then(response => {
-      // 추출된 해시태그를 content에 추가 
-      const hashtags = response.data.map(item => item.hashtags).flat();
-      const uniqueHashtags = Array.from(new Set(hashtags));
-      const hashtagString = uniqueHashtags.join(" ");
-      setContent(prev => prev + (prev ? " " : "") + hashtagString);
-      setHashtagResults(prev => [...prev, ...uniqueHashtags.map(tag => ({ content: tag }))]);
-    });
+    })
+    setLoading(false);
+
+    // 추출된 해시태그를 content에 추가 
+    const hashtags = response.data.map(item => item.hashtags).flat();
+    const uniqueHashtags = Array.from(new Set(hashtags));
+    const hashtagString = uniqueHashtags.join(" ");
+    setContent(prev => prev + (prev ? " " : "") + hashtagString);
+    setHashtagResults(prev => [...prev, ...uniqueHashtags.map(tag => ({ content: tag }))]);
   }
   const handleSetHashTag = (tag) => {
     const before = content.replace(/#\w*$/, `#${tag} `);
@@ -734,13 +757,21 @@ const FeedCreateEditModal = ({ isOpen, onClose, postId }) => {
                 </PreviewWrapper>
               </LeftBox>
               <RightBox>
-                <TextArea
-                  ref={textAreaRef}
-                  placeholder="문구를 입력하세요..."
-                  value={content}
-                  onChange={(e) => handleContentChange(e)}
-                  onKeyDown={handleContentKeyDown}
-                />
+                <TextAreaWrapper>
+                  <TextArea
+                    ref={textAreaRef}
+                    placeholder="문구를 입력하세요..."
+                    value={content}
+                    onChange={handleContentChange}
+                    onKeyDown={handleContentKeyDown}
+                    disabled={loading}
+                  />
+                  {loading && (
+                    <SpinnerOverlay>
+                      <Spinner />
+                    </SpinnerOverlay>
+                  )}
+                </TextAreaWrapper>
                 {/* 해시태그 검색 영역 */}
                 {hashtagActive && (
                   <HashtagDropdown>
