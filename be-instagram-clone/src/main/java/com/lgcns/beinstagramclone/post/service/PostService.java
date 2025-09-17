@@ -18,8 +18,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.lgcns.beinstagramclone.Image.domain.entity.ImageEntity;
 import com.lgcns.beinstagramclone.Image.repository.ImageRepository;
+import com.lgcns.beinstagramclone.comment.domain.dto.CommentResponseDTO;
+import com.lgcns.beinstagramclone.comment.domain.entity.CommentEntity;
+import com.lgcns.beinstagramclone.comment.repository.CommentRepository;
+import com.lgcns.beinstagramclone.comment.service.CommentService;
 import com.lgcns.beinstagramclone.hashtag.domain.entity.HashtagEntity;
 import com.lgcns.beinstagramclone.hashtag.repository.HashtagRepository;
+import com.lgcns.beinstagramclone.like.repository.LikeRepository;
+import com.lgcns.beinstagramclone.like.repository.LikeRepository.PostLikeCount;
 import com.lgcns.beinstagramclone.post.domain.dto.PostRequestDTO;
 import com.lgcns.beinstagramclone.post.domain.dto.PostResponseDTO;
 import com.lgcns.beinstagramclone.post.domain.entity.PostEntity;
@@ -39,6 +45,12 @@ public class PostService {
     private ImageRepository imageRepository;
     @Autowired
     private HashtagRepository hashtagRepository;
+    @Autowired
+    private CommentRepository commentRepository;
+    @Autowired
+    private LikeRepository likeRepository;
+    @Autowired
+    private CommentService commentService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -47,7 +59,7 @@ public class PostService {
         UserEntity author = userRepository.findById(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저"));
 
-        List<PostEntity> entities = postRepository.findByAuthor(author);
+        List<PostEntity> entities = postRepository.findByAuthorOrderByCreateDateDesc(author);
         return entities.stream()
                 .map(PostResponseDTO::fromEntity)
                 .toList();
@@ -100,12 +112,23 @@ public class PostService {
         return PostResponseDTO.fromEntity(post);
     }
 
-    @Transactional(readOnly = true)
-    public PostResponseDTO findPost(Integer postID) {
-        PostEntity post = postRepository.findByIdWithImages(postID)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다. id=" + postID));
-        return PostResponseDTO.fromEntity(post);
-    }
+@Transactional(readOnly = true)
+public PostResponseDTO findPost(Integer postID) {
+
+    PostEntity post = postRepository.findByIdWithImages(postID)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다. id=" + postID));
+
+    PostResponseDTO dto = PostResponseDTO.fromEntity(post);
+
+    List<CommentResponseDTO> comments = commentService.getTreeByPost(postID);
+
+    long likeCount = likeRepository.countByPostId(postID);
+
+    dto.setComments(comments);
+    dto.setLikeCount(likeCount);
+    
+    return dto;
+}
 
     @Transactional
     public PostResponseDTO update(Integer postID, PostRequestDTO dto) {

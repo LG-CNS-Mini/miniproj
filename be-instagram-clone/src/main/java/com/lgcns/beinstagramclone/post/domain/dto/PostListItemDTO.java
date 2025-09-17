@@ -27,6 +27,8 @@ public class PostListItemDTO {
     @Builder.Default
     private List<CommentResponseDTO> comments = new ArrayList<>();
 
+    private List<String> hashtags;
+    
     private long likeCount; // 총 종아요 수
     private boolean likedByMe; // 좋아요 여부
 

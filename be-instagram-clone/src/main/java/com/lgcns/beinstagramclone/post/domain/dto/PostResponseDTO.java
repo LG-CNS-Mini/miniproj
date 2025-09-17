@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
+import com.lgcns.beinstagramclone.comment.domain.dto.CommentResponseDTO;
 import com.lgcns.beinstagramclone.post.domain.entity.PostEntity;
 import com.lgcns.beinstagramclone.post.domain.entity.PostImageEntity;
 
@@ -30,6 +31,9 @@ public class PostResponseDTO {
     private LocalDateTime createDate;
     private String authorEmail;
     private List<String> imageUrls;
+
+    private List<CommentResponseDTO> comments;
+    private long likeCount;
 
     public static PostResponseDTO fromEntity(PostEntity post) {
         List<String> urls = (post.getImages() == null) ? List.of()

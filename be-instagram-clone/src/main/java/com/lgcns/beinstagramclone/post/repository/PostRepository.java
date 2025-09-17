@@ -15,6 +15,8 @@ public interface PostRepository extends JpaRepository<PostEntity, Integer> {
 
     List<PostEntity> findByAuthor(UserEntity author);
 
+    List<PostEntity> findByAuthorOrderByCreateDateDesc(UserEntity author);
+
     @Query("""
                 select distinct p
                 from PostEntity p

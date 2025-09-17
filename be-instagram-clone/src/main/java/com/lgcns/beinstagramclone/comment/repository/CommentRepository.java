@@ -18,4 +18,5 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Integer>
               order by c.createdAt asc
             """)
     List<CommentEntity> findAllByPostIdWithAuthor(@Param("postId") Integer postId);
+    
 }

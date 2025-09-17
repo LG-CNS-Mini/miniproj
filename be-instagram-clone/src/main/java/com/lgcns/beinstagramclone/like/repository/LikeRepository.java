@@ -28,6 +28,7 @@ public interface LikeRepository extends JpaRepository<LikeEntity, LikeId> {
     """)
     List<PostLikeCount> countByPostIds(@Param("postIds") Collection<Integer> postIds);
 
+    
     // 특정 회원이 좋아요한 글 목록 조회
     @Query("""
         select l.postId
