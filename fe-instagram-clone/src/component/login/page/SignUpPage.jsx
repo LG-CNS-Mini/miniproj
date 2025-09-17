@@ -3,77 +3,93 @@ import styled from "styled-components";
 import api from "../../../api/axios";
 import { Link, useNavigate } from "react-router-dom";
 
-// Container
+// 인스타그램 컨테이너 스타일
 const Container = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f2f2f2;
+    background-color: #fafafa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
 `;
 
-// Form Box
+// 인스타그램 폼 박스 스타일
 const FormWrapper = styled.div`
     background-color: white;
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
-    width: 400px;
+    border: 1px solid #dbdbdb;
+    border-radius: 1px;
+    padding: 20px 40px;
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 `;
 
-// Title
-const Title = styled.h2`
+// 인스타그램 로고나 제목 스타일
+const Title = styled.h1`
+    font-family: "Billabong", "Segoe UI", serif; /* 인스타그램 로고 폰트 대체 */
+    font-size: 50px;
+    margin: 22px auto 12px;
     text-align: center;
-    margin-bottom: 20px;
-    color: #333;
+    color: #262626;
+    font-weight: 400;
 `;
 
-// Input
+// 인풋 스타일
 const Input = styled.input`
     width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 16px;
+    padding: 9px 8px;
+    margin-bottom: 8px;
+    background-color: #fafafa;
+    border: 1px solid #dbdbdb;
+    border-radius: 3px;
+    font-size: 14px;
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
 
     &:focus {
         outline: none;
-        border-color: #007bff;
-        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        border-color: #a8a8a8;
     }
 `;
 
-// Button
+// 버튼 스타일
 const Button = styled.button`
     width: 100%;
-    padding: 12px;
-    background-color: #007bff;
+    padding: 8px;
+    background-color: #0095f6;
     color: white;
     border: none;
-    font-size: 16px;
-    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 8px;
 
     &:hover {
-        background-color: #0056b3;
+        background-color: #007bb6;
     }
 
     &:disabled {
-        background-color: #aaa;
+        background-color: #b2dffc;
         cursor: not-allowed;
     }
 `;
 
-const LinkText = styled.div`
-    text-align: center;
-    margin-top: 15px;
+// 하단 링크 박스 스타일
+const LinkBox = styled(FormWrapper)`
+    margin-top: 10px;
+    padding: 20px;
+    width: 350px;
     font-size: 14px;
+    text-align: center;
+`;
 
+const LinkText = styled.span`
     a {
-        color: #007bff;
+        color: #0095f6;
         text-decoration: none;
+        font-weight: 600;
         &:hover {
             text-decoration: underline;
         }
@@ -90,98 +106,98 @@ const SignUpPage = () => {
 
     const moveUrl = useNavigate();
 
-    const handleSubmit = async (e, email, passwd, name, nickname) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(">>>>>>>>>>> ", email, passwd, name, nickname);
 
         if (passwd !== confirmPasswd) {
             alert("비밀번호가 일치하지 않습니다.");
             return;
         }
-        console.log("회원가입 정보:");
-        // 여기서 API 호출 가능 axios post : data(emai, passwd, name)
-        // 1. 유효성 체크
-        // 2. 정상적인 데이터 입력시 화면전환 /signin 이동
+
+        console.log("회원가입 정보:", { email, passwd, name, nickname });
+
         const data = { email, passwd, name, nickname };
-        await api
-            .post("/api/v2/inspire/user/signup", data)
-            .then((response) => {
-                // console.log("[debug] >>> post response : " , response );
-                moveUrl("/signin");
-            })
-            .catch((error) => {
-                console.log("[debug] >>> post error :" + error);
-            });
+        try {
+            const response = await api.post(
+                "/api/v2/inspire/user/signup",
+                data
+            );
+            console.log("[debug] >>> post response:", response);
+            moveUrl("/signin");
+        } catch (error) {
+            console.log("[debug] >>> post error:", error);
+            // 에러 처리 로직 추가 (예: alert로 에러 메시지 표시)
+            alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+        }
     };
+
+    const isFormValid =
+        email &&
+        passwd &&
+        confirmPasswd &&
+        name &&
+        nickname &&
+        passwd === confirmPasswd;
 
     return (
         <Container>
-            <FormWrapper>
-                <Title>회원가입</Title>
-
-                <Input
-                    type="email"
-                    name="email"
-                    placeholder="이메일"
-                    value={email}
-                    onChange={(e) => {
-                        setEmail(e.target.value);
-                    }}
-                    required
-                />
-                <Input
-                    type="password"
-                    name="passwd"
-                    placeholder="비밀번호"
-                    value={passwd}
-                    onChange={(e) => {
-                        setPasswd(e.target.value);
-                    }}
-                    required
-                />
-                <Input
-                    type="password"
-                    name="confirmPasswd"
-                    placeholder="비밀번호 확인"
-                    value={confirmPasswd}
-                    onChange={(e) => {
-                        setConfirmPasswd(e.target.value);
-                    }}
-                    required
-                />
-                <Input
-                    type="text"
-                    name="name"
-                    placeholder="이름"
-                    value={name}
-                    onChange={(e) => {
-                        setName(e.target.value);
-                    }}
-                    required
-                />
-                <Input
-                    type="text"
-                    name="nickname"
-                    placeholder="닉네임"
-                    value={nickname}
-                    onChange={(e) => {
-                        setNickname(e.target.value);
-                    }}
-                    required
-                />
-                <Button
-                    type="button"
-                    onClick={(e) =>
-                        handleSubmit(e, email, passwd, name, nickname)
-                    }
-                >
-                    가입하기
-                </Button>
-
-                <LinkText>
-                    이미 회원이신가요? <Link to="/signin">로그인</Link>
-                </LinkText>
-            </FormWrapper>
+            <div>
+                <FormWrapper>
+                    <Title>Instagram</Title>
+                    <Input
+                        type="email"
+                        name="email"
+                        placeholder="이메일"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                    <Input
+                        type="password"
+                        name="passwd"
+                        placeholder="비밀번호"
+                        value={passwd}
+                        onChange={(e) => setPasswd(e.target.value)}
+                        required
+                    />
+                    <Input
+                        type="password"
+                        name="confirmPasswd"
+                        placeholder="비밀번호 확인"
+                        value={confirmPasswd}
+                        onChange={(e) => setConfirmPasswd(e.target.value)}
+                        required
+                    />
+                    <Input
+                        type="text"
+                        name="name"
+                        placeholder="이름"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                    <Input
+                        type="text"
+                        name="nickname"
+                        placeholder="닉네임"
+                        value={nickname}
+                        onChange={(e) => setNickname(e.target.value)}
+                        required
+                    />
+                    <Button
+                        type="submit"
+                        onClick={handleSubmit}
+                        disabled={!isFormValid}
+                    >
+                        가입하기
+                    </Button>
+                </FormWrapper>
+                <LinkBox>
+                    <LinkText>
+                        계정이 있으신가요? <Link to="/signin">로그인</Link>
+                    </LinkText>
+                </LinkBox>
+            </div>
         </Container>
     );
 };
