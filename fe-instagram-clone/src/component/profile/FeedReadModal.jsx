@@ -249,8 +249,12 @@ const FeedReadModal = ({ postId, isOpen, onClose, onDelete, userImageUrl }) => {
             <MenuButton id="menu-button" onClick={handleMenuClick}>⋯</MenuButton>
             {menuOpen && (
               <MenuModal id="menu-modal">
-                <MenuItem onClick={handleEdit}>수정</MenuItem>
-                <MenuItemDelete onClick={handleDelete}>삭제</MenuItemDelete>
+                {(post && post.authorEmail === myEmail) ? (
+                  <>
+                    <MenuItem onClick={handleEdit}>수정</MenuItem>
+                    <MenuItemDelete onClick={handleDelete}>삭제</MenuItemDelete>
+                  </>
+                ) : null}
                 <MenuItem onClick={handleMenuClose}>취소</MenuItem>
               </MenuModal>
             )}
