@@ -1,5 +1,6 @@
+
 // 시간 표시 함수
-function getTimeAgo(dateString) {
+const getTimeAgo = (dateString) => {
     const now = new Date();
     const postDate = new Date(dateString);
     const diffMs = now - postDate;
@@ -14,4 +15,4 @@ function getTimeAgo(dateString) {
     return "방금 전";
 }
 
-export { getTimeAgo };
+export default getTimeAgo;

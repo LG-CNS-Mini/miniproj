@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import api from "../../api/axios";
 import LikeButton from "../like/LikeButton";
-import { getTimeAgo } from "../../utils/timeUtils";
 const baseURL = import.meta.env.VITE_APP_JSON_SERVER_URL;
 
 
@@ -41,10 +40,9 @@ const CommentList = styled.ul`
 `;
 
 const CommentItem = styled.li`
-    margin-bottom: 14px;
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    margin-bottom: 14px;
 `;
 
 const CommentProfileImg = styled.img`
@@ -53,13 +51,22 @@ const CommentProfileImg = styled.img`
     border-radius: 50%;
     object-fit: cover;
     background: #eee;
+    margin-right: 10px;
 `;
 
 const CommentBody = styled.div`
     flex: 1;
+    display: flex;
+    flex-direction: column;
 `;
 
 const CommentTop = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+`;
+
+const CommentInfo = styled.div`
     display: flex;
     align-items: center;
     gap: 8px;
@@ -141,9 +148,9 @@ const DeleteBtn = styled.button`
     border: none;
     color: #e53e3e;
     font-size: 13px;
-    margin-left: 8px;
     cursor: pointer;
     padding: 0;
+    margin-left: 12px;
 `;
 
 
@@ -230,6 +237,22 @@ const LikeAndCommentSection = ({
             });
     };
 
+    const getTimeAgo = (dateString) => {
+        const now = new Date();
+        const postDate = new Date(dateString);
+        const diffMs = now - postDate;
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+
+        if (diffDay > 0) return `${diffDay}일 전`;
+        if (diffHour > 0) return `${diffHour}시간 전`;
+        if (diffMin > 0) return `${diffMin}분 전`;
+        return "방금 전";
+    }
+
+
     return (
         <div>
             <LikeButton
@@ -263,9 +286,11 @@ const LikeAndCommentSection = ({
                                 />
                                 <CommentBody>
                                     <CommentTop>
-                                        <CommentNickname>
-                                            {comment.authorNickname}
-                                        </CommentNickname>
+                                        <CommentInfo>
+                                            <CommentNickname>
+                                                {comment.authorNickname}
+                                            </CommentNickname>
+                                        </CommentInfo>
                                         {/* 내가 쓴 댓글만 삭제 버튼 노출 */}
                                         {comment.authorEmail === myEmail && (
                                             <DeleteBtn
