@@ -35,6 +35,7 @@ const FeedMain = ({ feedPage, profileUser }) => {
                 },
             });
             const items = res.data.items || [];
+            console.log(res.data);
             setHasNext(res.data.hasNext);
             if (isInit) {
                 setFeeds(items);
