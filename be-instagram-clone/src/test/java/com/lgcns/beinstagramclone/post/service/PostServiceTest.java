@@ -41,16 +41,6 @@ class PostServiceTest {
     private PostRepository postRepository;
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private ImageRepository imageRepository;
-    @Autowired
-    private HashtagRepository hashtagRepository;
-    @Autowired
-    private CommentRepository commentRepository;
-    @Autowired
-    private LikeRepository likeRepository;
-    @Autowired
-    private CommentService commentService;
 
     @Autowired
     UserService userService;
