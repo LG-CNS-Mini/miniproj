@@ -15,7 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lgcns.beinstagramclone.user.domain.dto.SseMessageResponseDTO;
 
-@RestController
+//@RestController
 @RequestMapping("/api/v2/inspire/sse")
 public class SseCtrl {
 

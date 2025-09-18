@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.lgcns.beinstagramclone.user.domain.entity.UserEntity;
 import com.lgcns.beinstagramclone.user.service.UserService;
+import com.nimbusds.oauth2.sdk.ErrorResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -48,13 +49,24 @@ public class UserCtrl {
 
     @PostMapping("/signup")
     @Operation(
-        summary = "회원가입",
-        description = "이메일/비밀번호/이름 등 정보를 받아 회원을 생성합니다.",
-        responses = {
-            @ApiResponse(responseCode = "204", description = "가입 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 검증 실패"),
-            @ApiResponse(responseCode = "500", description = "서버 오류")
-        }
+      summary = "회원가입",
+      responses = {
+        @ApiResponse(
+          responseCode = "204",
+          description = "가입 성공",
+          content = @Content 
+        ),
+        @ApiResponse(
+          responseCode = "400",
+          description = "유효성 검증 실패",
+          content = @Content
+        ),
+        @ApiResponse(
+          responseCode = "500",
+          description = "서버 오류",
+          content = @Content
+        )
+      }
     )
     public ResponseEntity signup(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
