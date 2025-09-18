@@ -1,0 +1,1363 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "OpenAPI definition",
+        "version": "v0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8088",
+            "description": "Generated server url"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Post API",
+            "description": "게시글 관련 API"
+        },
+        {
+            "name": "Logout API",
+            "description": "로그아웃(Refresh Token 제거)"
+        },
+        {
+            "name": "Like API",
+            "description": "게시글 좋아요 관련 API"
+        },
+        {
+            "name": "User API",
+            "description": "유저 관련 API"
+        },
+        {
+            "name": "Image AI API",
+            "description": "이미지 분석/해시태그 추천 API"
+        },
+        {
+            "name": "Comment API",
+            "description": "댓글 관련 API"
+        },
+        {
+            "name": "Follow API",
+            "description": "팔로우/언팔로우 API"
+        }
+    ],
+    "paths": {
+        "/auth/api/v2/inspire/user/logout": {
+            "post": {
+                "tags": [
+                    "Logout API"
+                ],
+                "summary": "로그아웃",
+                "description": "Authorization 헤더의 Access Token에서 사용자 식별자를 추출하고, 해당 사용자의 Refresh Token을 Redis에서 삭제합니다.",
+                "operationId": "logout",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "description": "Bearer 액세스 토큰",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "로그아웃 완료"
+                    },
+                    "401": {
+                        "description": "유효하지 않은 토큰 / 헤더 누락"
+                    },
+                    "500": {
+                        "description": "서버 오류"
+                    }
+                }
+            }
+        },
+        "/api/v2/inspire/user/signup": {
+            "post": {
+                "tags": [
+                    "User API"
+                ],
+                "summary": "회원가입",
+                "operationId": "signup",
+                "requestBody": {
+                    "description": "회원가입 요청 본문",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserRequestDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "204": {
+                        "description": "가입 성공"
+                    },
+                    "400": {
+                        "description": "유효성 검증 실패"
+                    },
+                    "500": {
+                        "description": "서버 오류"
+                    }
+                }
+            }
+        },
+        "/api/v2/inspire/user/profileimage/{userId}": {
+            "post": {
+                "tags": [
+                    "User API"
+                ],
+                "summary": "프로필 이미지 업데이트",
+                "description": "단일 이미지 파일을 업로드하여 사용자 프로필 이미지를 변경합니다.",
+                "operationId": "updateProfileImage",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "사용자 ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "user_123"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "image"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                    "image": {
+                                        "type": "string",
+                                        "description": "업로드할 이미지 파일 (multipart/form-data)",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "업데이트 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileImageResponseDTO"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "잘못된 요청/파일 누락"
+                    },
+                    "415": {
+                        "description": "지원하지 않는 콘텐츠 타입"
+                    },
+                    "500": {
+                        "description": "서버 오류"
+                    }
+                }
+            }
+        },
+        "/api/v2/inspire/like/unlike": {
+            "post": {
+                "tags": [
+                    "Like API"
+                ],
+                "summary": "좋아요 취소",
+                "description": "요청 본문에 포함된 이메일/게시글ID로 좋아요를 취소하고 현재 총 좋아요 수를 반환합니다.",
+                "operationId": "userUnlikesPost",
+                "requestBody": {
+                    "description": "좋아요 취소 요청",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LikeRequestDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "좋아요 취소 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": {
+                                        "likeCount": 12
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "유효성 검증 실패(필드 오류 등)"
+                    }
+                }
+            }
+        },
+        "/api/v2/inspire/like/like": {
+            "post": {
+                "tags": [
+                    "Like API"
+                ],
+                "summary": "좋아요 등록",
+                "description": "요청 본문에 포함된 이메일/게시글ID로 좋아요를 등록하고 현재 총 좋아요 수를 반환합니다.",
+                "operationId": "userLikesPost",
+                "requestBody": {
+                    "description": "좋아요 등록 요청",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LikeRequestDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "좋아요 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": {
+                                        "likeCount": 13
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "유효성 검증 실패(필드 오류 등)"
+                    }
+                }
+            }
+        },
+        "/api/v1/post/register": {
+            "post": {
+                "tags": [
+                    "Post API"
+                ],
+                "summary": "게시글 등록 (multipart/form-data)",
+                "description": "멀티파트로 게시글을 등록합니다.\n- content: 문자열\n- hashtags: 문자열 배열(예: [\"#봄날\",\"#산책\"])\n- authorEmail: 문자열\n- postImages: 이미지 파일들\n",
+                "operationId": "register",
+                "requestBody": {
+                    "description": "게시글 등록 폼",
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PostRequestDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "생성 성공"
+                    },
+                    "500": {
+                        "description": "서버 오류"
+                    }
+                }
+            }
+        },
+        "/api/v1/post/ai/hashtag": {
+            "post": {
+                "tags": [
+                    "Image AI API"
+                ],
+                "summary": "이미지 해시태그 추출",
+                "description": "여러 이미지 파일을 업로드하면 각 이미지에 대한 해시태그 목록을 반환합니다.",
+                "operationId": "image",
+                "requestBody": {
+                    "description": "멀티파트 폼 데이터 (images: 이미지 파일 목록, 기타 필드 포함 가능)",
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImageRequestDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "분석 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ImageHashtagDTO"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "잘못된 요청 / 파일 누락"
+                    },
+                    "415": {
+                        "description": "지원하지 않는 콘텐츠 타입"
+                    },
+                    "500": {
+                        "description": "서버 오류"
+                    }
+                }
+            }
+        },
+        "/api/v1/follow/{followerEmail}/follow/{followingEmail}": {
+            "post": {
+                "tags": [
+                    "Follow API"
+                ],
+                "summary": "팔로우",
+                "description": "followerEmail 사용자가 followingEmail 사용자를 팔로우합니다.",
+                "operationId": "follow",
+                "parameters": [
+                    {
+                        "name": "followerEmail",
+                        "in": "path",
+                        "description": "팔로우를 시도하는 사용자 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "me@example.com"
+                    },
+                    {
+                        "name": "followingEmail",
+                        "in": "path",
+                        "description": "팔로우 대상 사용자 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "other@example.com"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "팔로우 성공"
+                    },
+                    "400": {
+                        "description": "잘못된 요청"
+                    },
+                    "404": {
+                        "description": "사용자 없음"
+                    },
+                    "409": {
+                        "description": "이미 팔로우 중"
+                    }
+                }
+            }
+        },
+        "/api/v1/comments/register": {
+            "post": {
+                "tags": [
+                    "Comment API"
+                ],
+                "summary": "댓글 입력",
+                "description": "게시글에 새 댓글을 등록합니다.",
+                "operationId": "insert",
+                "requestBody": {
+                    "description": "댓글 작성 요청 본문",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CommentRequestDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "등록 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentResponseDTO"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "유효성 검증 실패"
+                    },
+                    "401": {
+                        "description": "인증 필요"
+                    }
+                }
+            }
+        },
+        "/api/v2/inspire/user/{userEmail}/{authorEmail}": {
+            "get": {
+                "tags": [
+                    "User API"
+                ],
+                "summary": "프로필 조회",
+                "description": "요청자가 특정 사용자의 프로필을 조회합니다.",
+                "operationId": "getUser",
+                "parameters": [
+                    {
+                        "name": "userEmail",
+                        "in": "path",
+                        "description": "조회 대상 사용자 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "target@example.com"
+                    },
+                    {
+                        "name": "authorEmail",
+                        "in": "path",
+                        "description": "요청자(작성자) 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "me@example.com"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "조회 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserProfileResponseDTO"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "사용자 없음"
+                    }
+                }
+            }
+        },
+        "/api/v2/inspire/user/suggest": {
+            "get": {
+                "tags": [
+                    "User API"
+                ],
+                "summary": "사용자 자동완성",
+                "description": "이름/이메일 일부 키워드로 사용자 목록을 최대 n개까지 추천합니다.",
+                "operationId": "suggestUsers",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "검색 키워드(부분 일치).",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "jun"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "최대 반환 개수",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 10
+                        },
+                        "example": 10
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "조회 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserSuggestDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/inspire/user/signin": {
+            "get": {
+                "tags": [
+                    "User API"
+                ],
+                "summary": "로그인",
+                "description": "이메일/비밀번호로 로그인하고, 응답 헤더에 액세스/리프레시 토큰을 반환합니다.",
+                "operationId": "signin",
+                "parameters": [
+                    {
+                        "name": "request",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/UserRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "로그인 성공",
+                        "headers": {
+                            "Authorization": {
+                                "description": "Bearer <access token>",
+                                "style": "simple",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "Refresh-Token": {
+                                "description": "Refresh token",
+                                "style": "simple",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponseDTO"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "인증 실패"
+                    }
+                }
+            }
+        },
+        "/api/v2/inspire/like/status": {
+            "get": {
+                "tags": [
+                    "Like API"
+                ],
+                "summary": "좋아요 상태 및 개수 조회",
+                "description": "특정 사용자(email)의 특정 게시글(postId)에 대해 좋아요 여부와 총 좋아요 수를 반환합니다.",
+                "operationId": "getLikeStatus",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "사용자 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "me@example.com"
+                    },
+                    {
+                        "name": "postId",
+                        "in": "query",
+                        "description": "게시글 ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "example": 11
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "조회 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": {
+                                        "isLiked": true,
+                                        "likeCount": 12
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "잘못된 요청 파라미터"
+                    }
+                }
+            }
+        },
+        "/api/v1/post/read/{postID}": {
+            "get": {
+                "tags": [
+                    "Post API"
+                ],
+                "summary": "게시글 단건 조회",
+                "description": "postID로 게시글 상세를 조회합니다.",
+                "operationId": "read",
+                "parameters": [
+                    {
+                        "name": "postID",
+                        "in": "path",
+                        "description": "게시글 ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "example": 11
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "게시글 없음"
+                    },
+                    "200": {
+                        "description": "조회 성공",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PostResponseDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/post/posts/my": {
+            "get": {
+                "tags": [
+                    "Post API"
+                ],
+                "summary": "내 게시글 목록 조회",
+                "description": "작성자 이메일 기준으로 본인이 작성한 게시글 목록을 반환합니다.",
+                "operationId": "myPosts",
+                "parameters": [
+                    {
+                        "name": "authorEmail",
+                        "in": "query",
+                        "description": "작성자 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "me@example.com"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "조회 성공",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PostResponseDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/post/following": {
+            "get": {
+                "tags": [
+                    "Post API"
+                ],
+                "summary": "팔로잉 피드 조회",
+                "description": "내가 팔로우하는 사용자의 게시글을 최신순으로 슬라이스 페이징하여 반환합니다.",
+                "operationId": "feedFromFollowing",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "내 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "me@example.com"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "페이지 번호",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 0
+                        },
+                        "example": 0
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "페이지 크기",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 5
+                        },
+                        "example": 5
+                    },
+                    {
+                        "name": "includeMe",
+                        "in": "query",
+                        "description": "내 글 포함 여부",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "example": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "조회 성공",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SliceResponseDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/comments/{postId}": {
+            "get": {
+                "tags": [
+                    "Comment API"
+                ],
+                "summary": "게시글 단위 댓글 조회",
+                "description": "해당 게시글의 댓글을 트리 구조(대댓글 포함)로 반환합니다.",
+                "operationId": "getTree",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "게시글 ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "example": 11
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "조회 성공",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CommentResponseDTO"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "게시글 없음"
+                    }
+                }
+            }
+        },
+        "/api/v1/post/delete/{postID}": {
+            "delete": {
+                "tags": [
+                    "Post API"
+                ],
+                "summary": "게시글 삭제",
+                "description": "postID로 게시글을 삭제합니다.",
+                "operationId": "delete",
+                "parameters": [
+                    {
+                        "name": "postID",
+                        "in": "path",
+                        "description": "게시글 ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "example": 11
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "삭제 성공"
+                    }
+                }
+            }
+        },
+        "/api/v1/follow/{followerEmail}/unfollow/{followingEmail}": {
+            "delete": {
+                "tags": [
+                    "Follow API"
+                ],
+                "summary": "언팔로우",
+                "description": "followerEmail 사용자가 followingEmail 사용자에 대한 팔로우를 해제합니다.",
+                "operationId": "unfollow",
+                "parameters": [
+                    {
+                        "name": "followerEmail",
+                        "in": "path",
+                        "description": "언팔로우를 시도하는 사용자 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "me@example.com"
+                    },
+                    {
+                        "name": "followingEmail",
+                        "in": "path",
+                        "description": "언팔로우 대상 사용자 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "other@example.com"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "언팔로우 성공"
+                    },
+                    "400": {
+                        "description": "잘못된 요청"
+                    },
+                    "404": {
+                        "description": "팔로우 관계 없음/사용자 없음"
+                    }
+                }
+            }
+        },
+        "/api/v1/comments/{commentId}": {
+            "delete": {
+                "tags": [
+                    "Comment API"
+                ],
+                "summary": "댓글 삭제",
+                "description": "댓글 작성자일 때 삭제할 수 있습니다.",
+                "operationId": "delete_1",
+                "parameters": [
+                    {
+                        "name": "commentId",
+                        "in": "path",
+                        "description": "댓글 ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "example": 123
+                    },
+                    {
+                        "name": "authorEmail",
+                        "in": "query",
+                        "description": "요청자(작성자) 이메일",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "me@example.com"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "삭제 성공"
+                    },
+                    "403": {
+                        "description": "권한 없음"
+                    },
+                    "404": {
+                        "description": "존재하지 않는 댓글"
+                    },
+                    "401": {
+                        "description": "인증 필요"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "UserRequestDTO": {
+                "required": [
+                    "name",
+                    "nickname"
+                ],
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "description": "사용자 이메일 (로그인 ID)",
+                        "example": "user@example.com"
+                    },
+                    "passwd": {
+                        "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]+$",
+                        "type": "string",
+                        "description": "비밀번호 (영문 대소문자, 숫자 조합)",
+                        "example": "Passw0rd123"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "사용자 이름",
+                        "example": "홍길동"
+                    },
+                    "nickname": {
+                        "type": "string",
+                        "description": "닉네임 (중복 불가)",
+                        "example": "hwang123"
+                    },
+                    "userImageUrl": {
+                        "type": "string",
+                        "description": "사용자 프로필 이미지 URL (상대 경로)",
+                        "example": "/images/2025/09/12/profile_abc123.png"
+                    }
+                },
+                "description": "사용자 요청 DTO (회원 가입, 로그인)"
+            },
+            "ProfileImageResponseDTO": {
+                "type": "object",
+                "properties": {
+                    "userImageUrl": {
+                        "type": "string",
+                        "description": "사용자 프로필 이미지 URL (상대 경로)",
+                        "example": "/images/2025/09/12/8b12cca1-92d2-40ff-9fe7-940b01fd0fdc.jfif"
+                    }
+                },
+                "description": "프로필 이미지 응답 DTO"
+            },
+            "LikeRequestDTO": {
+                "required": [
+                    "email",
+                    "postId"
+                ],
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "description": "좋아요 누른 회원 이메일",
+                        "example": "user@example.com"
+                    },
+                    "postId": {
+                        "type": "integer",
+                        "description": "좋아요 대상 게시글 ID",
+                        "format": "int32",
+                        "example": 11
+                    }
+                },
+                "description": "좋아요 요청 DTO"
+            },
+            "PostRequestDTO": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "description": "게시글 내용",
+                        "example": "오늘은 벚꽃 보러 다녀왔어요 "
+                    },
+                    "hashtags": {
+                        "type": "array",
+                        "description": "해시태그 목록",
+                        "example": [
+                            "#봄날",
+                            "#산책"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "description": "해시태그 목록",
+                            "example": "[\"#봄날\",\"#산책\"]"
+                        }
+                    },
+                    "authorEmail": {
+                        "type": "string",
+                        "description": "작성자 이메일",
+                        "example": "user@example.com"
+                    },
+                    "postImages": {
+                        "type": "array",
+                        "description": "업로드할 게시글 이미지 파일 목록 (멀티파트 전송)",
+                        "format": "binary",
+                        "items": {
+                            "type": "string",
+                            "format": "binary"
+                        }
+                    }
+                },
+                "description": "게시글 작성 요청 DTO"
+            },
+            "ImageHashtagDTO": {
+                "type": "object",
+                "properties": {
+                    "hashtags": {
+                        "type": "array",
+                        "description": "AI가 생성한 해시태그 목록",
+                        "example": [
+                            "#여행",
+                            "#바다",
+                            "#휴가"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "description": "AI가 생성한 해시태그 목록",
+                            "example": "[\"#여행\",\"#바다\",\"#휴가\"]"
+                        }
+                    }
+                },
+                "description": "AI 이미지 분석 후 생성된 해시태그 응답 DTO"
+            },
+            "ImageRequestDTO": {
+                "type": "object",
+                "properties": {
+                    "images": {
+                        "type": "array",
+                        "description": "이미지 파일 목록 (멀티파트 전송)",
+                        "items": {
+                            "type": "string",
+                            "format": "binary"
+                        }
+                    }
+                },
+                "description": "AI 태그 생성을 위한 이미지 입력 DTO"
+            },
+            "CommentResponseDTO": {
+                "type": "object",
+                "properties": {
+                    "commentId": {
+                        "type": "integer",
+                        "description": "댓글 ID",
+                        "format": "int32",
+                        "example": 101
+                    },
+                    "postId": {
+                        "type": "integer",
+                        "description": "게시글 ID",
+                        "format": "int32",
+                        "example": 11
+                    },
+                    "parentId": {
+                        "type": "integer",
+                        "description": "부모 댓글 ID (대댓글일 경우만 존재)",
+                        "format": "int32",
+                        "example": 100
+                    },
+                    "depth": {
+                        "type": "integer",
+                        "description": "댓글 깊이 (0=댓글, 1=대댓글)",
+                        "format": "int32",
+                        "example": 0
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "댓글 내용",
+                        "example": "좋은 글 잘 보고 갑니다!"
+                    },
+                    "authorEmail": {
+                        "type": "string",
+                        "description": "작성자 이메일",
+                        "example": "user@example.com"
+                    },
+                    "authorNickname": {
+                        "type": "string",
+                        "description": "작성자 닉네임",
+                        "example": "홍길동"
+                    },
+                    "authorProfileImageUrl": {
+                        "type": "string",
+                        "description": "작성자 프로필 이미지 URL (상대 경로)",
+                        "example": "/images/2025/09/12/abc123.jpg"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "description": "댓글 작성일시",
+                        "format": "date-time"
+                    },
+                    "children": {
+                        "type": "array",
+                        "description": "대댓글 리스트",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentResponseDTO"
+                        }
+                    }
+                },
+                "description": "댓글 응답 DTO"
+            },
+            "CommentRequestDTO": {
+                "required": [
+                    "content",
+                    "postId"
+                ],
+                "type": "object",
+                "properties": {
+                    "postId": {
+                        "type": "integer",
+                        "description": "댓글이 달릴 게시글 ID",
+                        "format": "int32",
+                        "example": 11
+                    },
+                    "parentId": {
+                        "type": "integer",
+                        "description": "부모 댓글 ID (대댓글일 경우만 필요)",
+                        "format": "int32",
+                        "example": 100
+                    },
+                    "content": {
+                        "maxLength": 500,
+                        "minLength": 0,
+                        "type": "string",
+                        "description": "댓글 내용 (최대 500자)",
+                        "example": "정말 좋은 글이네요!"
+                    },
+                    "authorEmail": {
+                        "type": "string",
+                        "description": "작성자 이메일",
+                        "example": "user@example.com"
+                    }
+                },
+                "description": "댓글 작성 요청 DTO"
+            },
+            "UserProfileResponseDTO": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "description": "사용자 이메일",
+                        "example": "user@example.com"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "사용자 이름",
+                        "example": "홍길동"
+                    },
+                    "userImageUrl": {
+                        "type": "string",
+                        "description": "프로필 이미지 URL (상대 경로)",
+                        "example": "/images/2025/09/12/profile_123abc.png"
+                    },
+                    "nickname": {
+                        "type": "string",
+                        "description": "사용자 닉네임",
+                        "example": "hwang123"
+                    },
+                    "followerCount": {
+                        "type": "integer",
+                        "description": "팔로워 수",
+                        "format": "int64",
+                        "example": 120
+                    },
+                    "followingCount": {
+                        "type": "integer",
+                        "description": "팔로잉 수",
+                        "format": "int64",
+                        "example": 80
+                    },
+                    "postCount": {
+                        "type": "integer",
+                        "description": "게시글 수",
+                        "format": "int64",
+                        "example": 35
+                    },
+                    "isFollow": {
+                        "type": "integer",
+                        "description": "팔로우 여부 (1 = 내가 팔로우함, 0 = 아님)",
+                        "format": "int64",
+                        "example": 1
+                    }
+                },
+                "description": "사용자 프로필 조회 응답 DTO"
+            },
+            "UserSuggestDTO": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "description": "사용자 이메일 (고유 ID)",
+                        "example": "user@example.com"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "사용자 이름",
+                        "example": "홍길동"
+                    },
+                    "nickname": {
+                        "type": "string",
+                        "description": "닉네임",
+                        "example": "hwang123"
+                    },
+                    "userImageUrl": {
+                        "type": "string",
+                        "description": "프로필 이미지 URL (상대 경로)",
+                        "example": "/images/2025/09/12/profile_123abc.png"
+                    }
+                },
+                "description": "사용자 검색 응답 DTO (검색 결과 목록용)"
+            },
+            "UserResponseDTO": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "description": "사용자 이메일",
+                        "example": "user@example.com"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "사용자 이름",
+                        "example": "홍길동"
+                    },
+                    "nickname": {
+                        "type": "string",
+                        "description": "닉네임",
+                        "example": "hwang123"
+                    },
+                    "userImageUrl": {
+                        "type": "string",
+                        "description": "프로필 이미지 URL (상대 경로)",
+                        "example": "/images/2025/09/12/profile_123abc.png"
+                    }
+                },
+                "description": "사용자 응답 DTO (회원 가입, 로그인)"
+            },
+            "PostResponseDTO": {
+                "type": "object",
+                "properties": {
+                    "postID": {
+                        "type": "integer",
+                        "description": "게시글 ID",
+                        "format": "int32",
+                        "example": 11
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "게시글 내용",
+                        "example": "오늘 날씨가 너무 좋아요"
+                    },
+                    "hashtags": {
+                        "type": "array",
+                        "description": "해시태그 목록",
+                        "example": [
+                            "#봄날",
+                            "#산책"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "description": "해시태그 목록",
+                            "example": "[\"#봄날\",\"#산책\"]"
+                        }
+                    },
+                    "createDate": {
+                        "type": "string",
+                        "description": "게시글 작성일시",
+                        "format": "date-time"
+                    },
+                    "authorEmail": {
+                        "type": "string",
+                        "description": "작성자 이메일",
+                        "example": "user@example.com"
+                    },
+                    "imageUrls": {
+                        "type": "array",
+                        "description": "게시글 이미지 URL 목록 (상대 경로)",
+                        "example": [
+                            "/images/2025/09/12/abc123.jpg",
+                            "/images/2025/09/12/xyz456.png"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "description": "게시글 이미지 URL 목록 (상대 경로)",
+                            "example": "[\"/images/2025/09/12/abc123.jpg\",\"/images/2025/09/12/xyz456.png\"]"
+                        }
+                    },
+                    "comments": {
+                        "type": "array",
+                        "description": "댓글 목록 (트리 구조)",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentResponseDTO"
+                        }
+                    },
+                    "likeCount": {
+                        "type": "integer",
+                        "description": "좋아요 개수",
+                        "format": "int64",
+                        "example": 42
+                    }
+                },
+                "description": "게시글 응답 DTO"
+            },
+            "SliceResponseDTO": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "description": "조회된 데이터 목록",
+                        "example": [
+                            {
+                                "postId": 11,
+                                "authorName": "홍길동",
+                                "content": "오늘은 날씨가 참 좋네요 "
+                            }
+                        ],
+                        "items": {
+                            "type": "object",
+                            "description": "조회된 데이터 목록",
+                            "example": [
+                                {
+                                    "postId": 11,
+                                    "authorName": "홍길동",
+                                    "content": "오늘은 날씨가 참 좋네요 "
+                                }
+                            ]
+                        }
+                    },
+                    "page": {
+                        "type": "integer",
+                        "description": "현재 페이지 번호 (0-based)",
+                        "format": "int32",
+                        "example": 0
+                    },
+                    "size": {
+                        "type": "integer",
+                        "description": "페이지 크기",
+                        "format": "int32",
+                        "example": 5
+                    },
+                    "hasNext": {
+                        "type": "boolean",
+                        "description": "다음 페이지 존재 여부",
+                        "example": true
+                    }
+                },
+                "description": "슬라이스 페이징 응답 DTO"
+            }
+        }
+    }
+}
