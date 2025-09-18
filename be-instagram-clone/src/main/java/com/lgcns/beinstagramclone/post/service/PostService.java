@@ -112,23 +112,23 @@ public class PostService {
         return PostResponseDTO.fromEntity(post);
     }
 
-@Transactional(readOnly = true)
-public PostResponseDTO findPost(Integer postID) {
+    @Transactional(readOnly = true)
+    public PostResponseDTO findPost(Integer postID) {
 
-    PostEntity post = postRepository.findByIdWithImages(postID)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다. id=" + postID));
+        PostEntity post = postRepository.findByIdWithImages(postID)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다. id=" + postID));
 
-    PostResponseDTO dto = PostResponseDTO.fromEntity(post);
+        PostResponseDTO dto = PostResponseDTO.fromEntity(post);
 
-    List<CommentResponseDTO> comments = commentService.getTreeByPost(postID);
+        List<CommentResponseDTO> comments = commentService.getTreeByPost(postID);
 
-    long likeCount = likeRepository.countByPostId(postID);
+        long likeCount = likeRepository.countByPostId(postID);
 
-    dto.setComments(comments);
-    dto.setLikeCount(likeCount);
-    
-    return dto;
-}
+        dto.setComments(comments);
+        dto.setLikeCount(likeCount);
+
+        return dto;
+    }
 
     @Transactional
     public PostResponseDTO update(Integer postID, PostRequestDTO dto) {
