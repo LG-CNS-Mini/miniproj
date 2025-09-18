@@ -18,6 +18,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,8 +45,10 @@ class PostServiceTest {
 
     @Autowired
     UserService userService;
+
     @Test
     @Transactional
+    @DisplayName("게시물 찾기")
     void givenUserAndOnePostInsertWhenSelectThenReturnOnePost() {
         // given
         String userEmail = saveUser();
@@ -76,6 +79,7 @@ class PostServiceTest {
 
     @Test
     @Transactional
+    @DisplayName("게시물 저장")
     void givenPostWhenSavePostThenFindOnePost() {
         // given
         String userEmail = saveUser();
@@ -108,6 +112,7 @@ class PostServiceTest {
 
     @Test
     @Transactional
+    @DisplayName("게시물 등록 후 내용 체크")
     void givenSaveOnePostWhenFindPostThenReturnOnePost() {
         // given
         String userEmail = saveUser();
@@ -142,6 +147,7 @@ class PostServiceTest {
 
     @Test
     @Transactional
+    @DisplayName("게시물 삭제")
     void givenSavedPostWhenDeleteThenPostShouldBeDeleted() {
         // given
         String userEmail = saveUser();

@@ -3,6 +3,7 @@ package com.lgcns.beinstagramclone.image.service;
 import com.lgcns.beinstagramclone.Image.service.ImageAIService;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,6 +27,7 @@ public class ImageServicedTest {
     }
 
     @Test
+    @DisplayName("사진으로부터 해시태그 추출")
     void givenOneImageWhenGetHashtagThenReturnFiveHashtags() throws Exception {
         // given
         String testImagePath = "src/test/resources/test-images/도전.png";
