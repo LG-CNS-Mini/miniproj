@@ -14,7 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-public class ImageServicedTest2 {
+public class ImageServicedTest {
 
     @Autowired
     private ImageAIService imageAIService;
